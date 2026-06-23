@@ -10,54 +10,55 @@ export default function App() {
   const [screen, setScreen] = useState('home')
   const [activeMatchId, setActiveMatchId] = useState(null)
 
+  let content
   if (screen === 'setup') {
-    return (
+    content = (
       <MatchSetup
         onBack={() => setScreen('home')}
         onStart={id => { setActiveMatchId(id); setScreen('live') }}
       />
     )
-  }
-
-  if (screen === 'live') {
-    return (
+  } else if (screen === 'live') {
+    content = (
       <MatchLive
         matchId={activeMatchId}
         onBack={() => setScreen('home')}
         onStats={() => setScreen('stats')}
       />
     )
-  }
-
-  if (screen === 'stats') {
-    return (
+  } else if (screen === 'stats') {
+    content = (
       <MatchStats
         matchId={activeMatchId}
         onBack={() => setScreen('home')}
       />
     )
-  }
-
-  if (screen === 'squad') {
-    return <Squad onBack={() => setScreen('home')} />
-  }
-
-  if (screen === 'season') {
-    return (
+  } else if (screen === 'squad') {
+    content = <Squad onBack={() => setScreen('home')} />
+  } else if (screen === 'season') {
+    content = (
       <SeasonDashboard
         onBack={() => setScreen('home')}
         onOpenMatch={id => { setActiveMatchId(id); setScreen('live') }}
       />
     )
+  } else {
+    content = (
+      <Home
+        onNewMatch={() => setScreen('setup')}
+        onOpenMatch={id => { setActiveMatchId(id); setScreen('live') }}
+        onOpenStats={id => { setActiveMatchId(id); setScreen('stats') }}
+        onSquad={() => setScreen('squad')}
+        onSeason={() => setScreen('season')}
+      />
+    )
   }
 
   return (
-    <Home
-      onNewMatch={() => setScreen('setup')}
-      onOpenMatch={id => { setActiveMatchId(id); setScreen('live') }}
-      onOpenStats={id => { setActiveMatchId(id); setScreen('stats') }}
-      onSquad={() => setScreen('squad')}
-      onSeason={() => setScreen('season')}
-    />
+    <div style={{ background: '#030712', minHeight: '100dvh' }}>
+      <div style={{ maxWidth: 480, margin: '0 auto' }}>
+        {content}
+      </div>
+    </div>
   )
 }

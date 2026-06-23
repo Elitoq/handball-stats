@@ -1,3 +1,4 @@
+import { BarChart2, FileText, ChevronLeft, TrendingUp } from 'lucide-react'
 import { loadData, getPlayerStats, SHOT_TYPES } from '../data/store'
 import { printSeasonReport, printPlayerSeasonReport } from '../reports/generateReport'
 
@@ -13,7 +14,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
           <h1 style={h1}>Temporada</h1>
         </div>
         <div style={{ textAlign: 'center', padding: '64px 16px', color: '#4b5563' }}>
-          <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+          <BarChart2 size={48} color="#374151" style={{ margin: '0 auto 16px' }} />
           <p>Registra al menos un partido para ver las estadísticas de temporada</p>
         </div>
       </div>
@@ -79,8 +80,8 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
     <div style={page}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <button onClick={onBack} style={linkBtn}>← Volver</button>
-          <button onClick={() => printSeasonReport(matches, playerMap)} style={exportBtn}>📄 Exportar PDF</button>
+          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> Volver</button>
+          <button onClick={() => printSeasonReport(matches, playerMap)} style={exportBtn}><FileText size={13} /> Exportar PDF</button>
         </div>
         <h1 style={h1}>Temporada</h1>
         <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>{matches.length} partido{matches.length !== 1 ? 's' : ''} registrado{matches.length !== 1 ? 's' : ''}</p>
@@ -232,7 +233,7 @@ function PlayerRankRow({ player, rank, mode, onExport }) {
         </div>
       )}
       {onExport && (
-        <button onClick={onExport} style={{ background: '#1e1b4b', color: '#a5b4fc', border: '1px solid #3730a3', borderRadius: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>📄</button>
+        <button onClick={onExport} style={{ background: '#0d2456', color: '#7eb3ff', border: '1px solid #1e3a7a', borderRadius: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}><FileText size={13} /></button>
       )}
     </div>
   )
@@ -303,6 +304,6 @@ function LegendDot({ color, label }) {
 }
 
 const page = { minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }
-const linkBtn = { color: '#9ca3af', background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 8, display: 'block' }
-const exportBtn = { background: '#312e81', color: '#a5b4fc', border: '1px solid #4338ca', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }
+const linkBtn = { color: '#9ca3af', background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 4 }
+const exportBtn = { background: '#0d2456', color: '#7eb3ff', border: '1px solid #1e3a7a', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }
 const h1 = { margin: '4px 0 0', fontSize: 26, fontWeight: 700 }

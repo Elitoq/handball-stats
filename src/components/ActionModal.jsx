@@ -190,7 +190,6 @@ function SelectedBadge({ player, onClear, color }) {
 function GoalGrid({ zones, selected, onSelect, color }) {
   const top = zones.slice(0, 3)
   const mid = zones.slice(3, 6)
-  const special = zones[6]
   const lbl = z => z.replace(' alto', '↑').replace(' bajo', '↓').replace('Izq.', 'I').replace('Der.', 'D').replace('Centro', 'C')
   const cellStyle = (z) => ({
     background: selected === z ? color : '#374151',
@@ -202,15 +201,9 @@ function GoalGrid({ zones, selected, onSelect, color }) {
       <div style={{ display: 'flex', gap: 6, marginBottom: 6 }}>
         {top.map(z => <button key={z} onClick={() => onSelect(z)} style={cellStyle(z)}>{lbl(z)}</button>)}
       </div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: special ? 8 : 0 }}>
+      <div style={{ display: 'flex', gap: 6 }}>
         {mid.map(z => <button key={z} onClick={() => onSelect(z)} style={cellStyle(z)}>{lbl(z)}</button>)}
       </div>
-      {special && (
-        <button onClick={() => onSelect(special)}
-          style={{ width: '100%', background: selected === special ? '#b45309' : '#374151', color: 'white', border: 'none', borderRadius: 8, padding: '10px', fontSize: 12, fontWeight: 500, cursor: 'pointer', marginTop: 6 }}>
-          {special}
-        </button>
-      )}
     </div>
   )
 }

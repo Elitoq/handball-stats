@@ -1,4 +1,5 @@
 import { useState, useMemo } from 'react'
+import { User, Shield, Award, FileText, ChevronLeft } from 'lucide-react'
 import { loadData, getPlayerStats, calcPlayerRating, ratingLabel, ratingColor, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 import { printMatchReport, printPlayerMatchReport } from '../reports/generateReport'
 
@@ -59,8 +60,8 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <button onClick={onBack} style={linkBtn}>← Volver</button>
-          <button onClick={() => printMatchReport(match)} style={exportBtn}>📄 Exportar PDF</button>
+          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> Volver</button>
+          <button onClick={() => printMatchReport(match)} style={exportBtn}><FileText size={13} /> Exportar PDF</button>
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{match.teamName} vs {match.rival}</div>
         <div style={{ color: '#6b7280', fontSize: 13 }}>{match.date}</div>
@@ -87,12 +88,12 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
             <StatCard label="Goles" value={goals.length} color="#4ade80" />
             <StatCard label="Fallos" value={misses.length} color="#facc15" />
-            <PctStatCard label="Eficacia" success={goals.length} total={goals.length + misses.length} color="#a78bfa" />
+            <PctStatCard label="Eficacia" success={goals.length} total={goals.length + misses.length} color="#7eb3ff" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
             <StatCard label="Paradas" value={saves.length} color="#60a5fa" />
             <StatCard label="Encajados" value={conceded.length} color="#c084fc" />
-            <PctStatCard label="% Paradas" success={saves.length} total={saves.length + conceded.length} color="#818cf8" />
+            <PctStatCard label="% Paradas" success={saves.length} total={saves.length + conceded.length} color="#7eb3ff" />
           </div>
         </Section>
 
@@ -121,8 +122,8 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           const rc = ratingColor(mvp.rating)
           return (
             <Section title="Jugadora del partido">
-              <div style={{ background: 'linear-gradient(135deg,#1e1b4b,#312e81)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
-                <div style={{ fontSize: 36 }}>🏅</div>
+              <div style={{ background: 'linear-gradient(135deg,#0a1628,#0d2456)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <Award size={36} color="#7eb3ff" strokeWidth={1.5} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 17 }}>#{mvp.number} {mvp.name}</div>
                   <div style={{ color: '#a5b4fc', fontSize: 12, marginTop: 2 }}>{mvp.role === 'goalkeeper' ? '🧤 Portera' : '🤾 Jugadora'}</div>
@@ -176,15 +177,15 @@ function PlayerDetail({ match, player, stats, onBack }) {
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <button onClick={onBack} style={linkBtn}>← Equipo</button>
-          <button onClick={() => printPlayerMatchReport(match, player?.id)} style={exportBtn}>📄 Exportar PDF</button>
+          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> Equipo</button>
+          <button onClick={() => printPlayerMatchReport(match, player?.id)} style={exportBtn}><FileText size={13} /> Exportar PDF</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 20 }}>#{player?.number}</span>
+            <span style={{ color: '#7eb3ff', fontWeight: 700, fontSize: 20 }}>#{player?.number}</span>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{player?.name}</div>
-              <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? '🧤 Portera' : '🤾 Jugadora'}</div>
+              <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? <><Shield size={12} style={{display:'inline',marginRight:3}} />Portera</> : <><User size={12} style={{display:'inline',marginRight:3}} />Jugadora</>}</div>
             </div>
           </div>
           {(() => {
@@ -219,7 +220,7 @@ function FieldPlayerStats({ stats }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
           <StatCard label="Goles" value={stats.goals} color="#4ade80" />
           <StatCard label="Fallos" value={stats.misses} color="#facc15" />
-          <PctStatCard label="Eficacia" success={stats.goals} total={totalShots} color="#a78bfa" />
+          <PctStatCard label="Eficacia" success={stats.goals} total={totalShots} color="#7eb3ff" />
         </div>
         {stats.shootingPct != null && (
           <EfficiencyBar pct={stats.shootingPct} color="#16a34a" label={`${stats.goals} goles de ${totalShots} lanzamientos`} />
@@ -268,7 +269,7 @@ function GoalkeeperStats({ stats }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
           <StatCard label="Paradas" value={stats.saves} color="#60a5fa" />
           <StatCard label="Encajados" value={stats.conceded} color="#c084fc" />
-          <PctStatCard label="% Paradas" success={stats.saves} total={totalShots} color="#a78bfa" />
+          <PctStatCard label="% Paradas" success={stats.saves} total={totalShots} color="#7eb3ff" />
         </div>
         {stats.savePct != null && (
           <EfficiencyBar pct={stats.savePct} color="#2563eb" label={`${stats.saves} paradas de ${totalShots} disparos`} />
@@ -340,10 +341,10 @@ function PlayerRow({ player, onSelect }) {
     <button onClick={onSelect} style={{ width: '100%', background: '#1f2937', border: 'none', borderRadius: 14, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', color: 'white' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-          <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 16, minWidth: 36 }}>#{player.number}</span>
+          <span style={{ color: '#7eb3ff', fontWeight: 700, fontSize: 16, minWidth: 36 }}>#{player.number}</span>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15 }}>{player.name}</div>
-            <div style={{ color: '#6b7280', fontSize: 12 }}>{isGK ? '🧤 Portera' : '🤾 Jugadora'}</div>
+            <div style={{ color: '#6b7280', fontSize: 12 }}>{isGK ? <><Shield size={11} style={{display:'inline',marginRight:3}} />Portera</> : <><User size={11} style={{display:'inline',marginRight:3}} />Jugadora</>}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -361,13 +362,13 @@ function PlayerRow({ player, onSelect }) {
           ? [
               { label: 'Paradas', value: s.saves, color: '#60a5fa' },
               { label: 'Encajados', value: s.conceded, color: '#c084fc' },
-              { label: s.savePct != null ? `${s.savePct}%` : '-', value: '⛔', color: '#818cf8' },
+              { label: s.savePct != null ? `${s.savePct}%` : '-', value: '⛔', color: '#7eb3ff' },
               { label: 'Exclus.', value: s.exclusions, color: '#f87171' },
             ]
           : [
               { label: 'Goles', value: s.goals, color: '#4ade80' },
               { label: 'Fallos', value: s.misses, color: '#facc15' },
-              { label: s.shootingPct != null ? `${s.shootingPct}%` : '-', value: '🎯', color: '#a78bfa' },
+              { label: s.shootingPct != null ? `${s.shootingPct}%` : '-', value: '🎯', color: '#7eb3ff' },
               { label: 'Pérd.', value: s.turnovers, color: '#fb923c' },
             ]
         ).map(({ label, value, color }) => (
@@ -384,11 +385,9 @@ function PlayerRow({ player, onSelect }) {
 // Mapa de distribución para equipo: muestra count/total y %
 function ZoneHeatmap({ events, color }) {
   const zones = GOAL_ZONES.slice(0, 6)
-  const special = GOAL_ZONES[6]
   const allZones = events.map(e => e.details?.zone).filter(Boolean)
   const total = allZones.length
   const counts = zones.map(z => allZones.filter(x => x === z).length)
-  const specialCount = allZones.filter(x => x === special).length
   const max = Math.max(...counts, 1)
   const isBlue = color.includes('2563')
 
@@ -414,15 +413,6 @@ function ZoneHeatmap({ events, color }) {
           ))}
         </div>
       </div>
-      {specialCount > 0 && (
-        <div style={{ marginTop: 8, background: '#78350f', borderRadius: 8, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: '#fde68a', fontSize: 13 }}>7 metros</span>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ color: '#fde68a', fontWeight: 700 }}>{specialCount}/{total > 0 ? total : specialCount}</span>
-            {total > 0 && <div style={{ color: '#fbbf24', fontSize: 11 }}>{Math.round(specialCount / total * 100)}%</div>}
-          </div>
-        </div>
-      )}
       {total === 0 && (
         <div style={{ color: '#4b5563', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Sin zona registrada</div>
       )}
@@ -444,7 +434,6 @@ function DistCell({ label, count, total, bg, border }) {
 // Mapa de eficacia por zona para jugadora individual (verde = bueno, rojo = malo)
 function ZoneEfficiencyMap({ successEvents, totalEvents, successLabel, totalLabel }) {
   const zones = GOAL_ZONES.slice(0, 6)
-  const special = GOAL_ZONES[6]
 
   function zoneData(z) {
     const success = successEvents.filter(e => e.details?.zone === z).length
@@ -462,7 +451,6 @@ function ZoneEfficiencyMap({ successEvents, totalEvents, successLabel, totalLabe
   }
 
   const zonesData = zones.map(z => ({ zone: z, ...zoneData(z) }))
-  const specialData = zoneData(special)
 
   return (
     <div style={{ background: '#1f2937', borderRadius: 12, padding: 12 }}>
@@ -479,15 +467,6 @@ function ZoneEfficiencyMap({ successEvents, totalEvents, successLabel, totalLabe
           ))}
         </div>
       </div>
-      {specialData.total > 0 && (
-        <div style={{ marginTop: 8, background: cellBg(specialData.pct, specialData.total), borderRadius: 8, padding: '10px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ color: 'white', fontSize: 13 }}>7 metros</span>
-          <div style={{ textAlign: 'right' }}>
-            <span style={{ color: 'white', fontWeight: 700 }}>{specialData.success}/{specialData.total}</span>
-            <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 11 }}>{specialData.pct}%</div>
-          </div>
-        </div>
-      )}
       {/* Leyenda */}
       <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'center' }}>
         {[['#15803d','>70%'],['#4d7c0f','50-70%'],['#b45309','30-50%'],['#b91c1c','<30%']].map(([c,l]) => (
@@ -619,5 +598,5 @@ function Timeline({ events, players }) {
   )
 }
 
-const linkBtn = { color: '#9ca3af', background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', padding: 0 }
-const exportBtn = { background: '#312e81', color: '#a5b4fc', border: '1px solid #4338ca', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }
+const linkBtn = { color: '#9ca3af', background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', gap: 4 }
+const exportBtn = { background: '#0d2456', color: '#7eb3ff', border: '1px solid #1e3a7a', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }

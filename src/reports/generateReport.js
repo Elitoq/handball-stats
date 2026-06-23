@@ -510,7 +510,6 @@ const ZONE_LABELS_SHORT = ['I↑','C↑','D↑','I↓','C↓','D↓']
 function zoneMap(totalEvents, successEvents, totalLabel, successLabel) {
   const successIds = new Set(successEvents.map(e => e.id))
   const zones6 = GOAL_ZONES.slice(0, 6)
-  const special = GOAL_ZONES[6]
 
   function zoneData(z) {
     const total = totalEvents.filter(e => e.details?.zone === z).length
@@ -539,9 +538,6 @@ function zoneMap(totalEvents, successEvents, totalLabel, successLabel) {
     </td>`
   })
 
-  const specialData = zoneData(special)
-  const specBg = cellColor(specialData.pct, specialData.total)
-
   return `
     <div class="zone-map-wrap">
       <div class="zone-map-label">▲ Portería</div>
@@ -549,10 +545,6 @@ function zoneMap(totalEvents, successEvents, totalLabel, successLabel) {
         <tr>${cells6.slice(0,3).join('')}</tr>
         <tr>${cells6.slice(3,6).join('')}</tr>
       </table>
-      ${specialData.total > 0 ? `
-        <div class="zone-7m" style="background:${specBg}">
-          <strong>7 metros:</strong> ${specialData.success}/${specialData.total} · ${specialData.pct}%
-        </div>` : ''}
       <div class="zone-legend">
         ${[['#15803d','>70%'],['#65a30d','50-70%'],['#d97706','30-50%'],['#dc2626','<30%'],['#f3f4f6','Sin datos']].map(([c,l]) =>
           `<span><span style="display:inline-block;width:12px;height:12px;background:${c};border-radius:2px;border:1px solid #e5e7eb;vertical-align:middle;margin-right:3px"></span>${l}</span>`

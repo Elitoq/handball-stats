@@ -1,9 +1,10 @@
 import { useState } from 'react'
+import { User, Shield, Users } from 'lucide-react'
 import { loadData, saveData, createPlayer } from '../data/store'
 
 const ROLE_OPTIONS = [
-  { value: 'player', label: '🤾 Jugadora' },
-  { value: 'goalkeeper', label: '🧤 Portera' },
+  { value: 'player',     label: 'Jugadora', Icon: User   },
+  { value: 'goalkeeper', label: 'Portera',  Icon: Shield },
 ]
 
 export default function Squad({ onBack }) {
@@ -51,7 +52,7 @@ export default function Squad({ onBack }) {
     setEditId(null)
   }
 
-  const s = { bg: '#030712', card: '#1f2937', border: '#374151', muted: '#6b7280', text: 'white', accent: '#818cf8' }
+  const s = { bg: '#030712', card: '#1f2937', border: '#374151', muted: '#6b7280', text: 'white', accent: '#7eb3ff' }
 
   return (
     <div style={{ minHeight: '100dvh', background: s.bg, color: s.text, fontFamily: 'system-ui, sans-serif' }}>
@@ -69,8 +70,8 @@ export default function Squad({ onBack }) {
               key={r.value}
               type="button"
               onClick={() => setNewRole(r.value)}
-              style={{ flex: 1, background: newRole === r.value ? '#3730a3' : s.card, color: newRole === r.value ? 'white' : s.muted, border: `1px solid ${newRole === r.value ? '#6366f1' : s.border}`, borderRadius: 10, padding: '10px 8px', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
-            >{r.label}</button>
+              style={{ flex: 1, background: newRole === r.value ? '#0d2456' : s.card, color: newRole === r.value ? '#7eb3ff' : s.muted, border: `1px solid ${newRole === r.value ? '#1e3a7a' : s.border}`, borderRadius: 10, padding: '10px 8px', fontSize: 14, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            ><r.Icon size={14} />{r.label}</button>
           ))}
         </div>
         {/* Número + nombre */}
@@ -91,14 +92,14 @@ export default function Squad({ onBack }) {
         </div>
         <button
           type="submit"
-          style={{ width: '100%', background: '#4f46e5', color: 'white', border: 'none', borderRadius: 12, padding: 16, fontSize: 17, fontWeight: 700, cursor: 'pointer', display: 'block' }}
+          style={{ width: '100%', background: '#1a56db', color: 'white', border: 'none', borderRadius: 12, padding: 16, fontSize: 17, fontWeight: 700, cursor: 'pointer', display: 'block' }}
         >+ Añadir {newRole === 'goalkeeper' ? 'portera' : 'jugadora'}</button>
       </form>
 
       <div style={{ padding: '0 16px 32px' }}>
         {squad.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
-            <div style={{ fontSize: 40, marginBottom: 12 }}>🏐</div>
+            <Users size={40} color="#374151" style={{ margin: '0 auto 12px' }} />
             <p style={{ color: '#4b5563', fontSize: 14 }}>Añade las jugadoras de tu equipo</p>
           </div>
         ) : (
@@ -112,8 +113,8 @@ export default function Squad({ onBack }) {
                       <div style={{ display: 'flex', gap: 8 }}>
                         {ROLE_OPTIONS.map(r => (
                           <button key={r.value} type="button" onClick={() => setEditRole(r.value)}
-                            style={{ flex: 1, background: editRole === r.value ? '#3730a3' : '#374151', color: editRole === r.value ? 'white' : s.muted, border: 'none', borderRadius: 8, padding: '8px', fontSize: 13, cursor: 'pointer' }}>
-                            {r.label}
+                            style={{ flex: 1, background: editRole === r.value ? '#0d2456' : '#374151', color: editRole === r.value ? '#7eb3ff' : s.muted, border: `1px solid ${editRole === r.value ? '#1e3a7a' : 'transparent'}`, borderRadius: 8, padding: '8px', fontSize: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+                            <r.Icon size={13} />{r.label}
                           </button>
                         ))}
                       </div>
@@ -132,7 +133,7 @@ export default function Squad({ onBack }) {
                         <span style={{ color: s.accent, fontWeight: 700, width: 32 }}>#{p.number}</span>
                         <div>
                           <div style={{ fontSize: 15 }}>{p.name}</div>
-                          <div style={{ fontSize: 12, color: s.muted }}>{p.role === 'goalkeeper' ? '🧤 Portera' : '🤾 Jugadora'}</div>
+                          <div style={{ fontSize: 12, color: s.muted, display: 'flex', alignItems: 'center', gap: 4 }}>{p.role === 'goalkeeper' ? <><Shield size={11} /> Portera</> : <><User size={11} /> Jugadora</>}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>

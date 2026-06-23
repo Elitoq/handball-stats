@@ -68,7 +68,7 @@ export default function MatchSetup({ onStart, onBack }) {
         <div className="p-4">
           <button
             onClick={() => setStep('players')}
-            className="w-full bg-indigo-600 active:bg-indigo-700 text-white font-bold py-4 rounded-2xl text-lg"
+            className="w-full bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-2xl text-lg"
           >
             Siguiente →
           </button>
@@ -104,10 +104,10 @@ export default function MatchSetup({ onStart, onBack }) {
                 <button
                   key={p.id}
                   onClick={() => togglePlayer(p.id)}
-                  className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition-colors ${selected ? 'bg-indigo-900 border border-indigo-500' : 'bg-gray-800 border border-transparent'}`}
+                  className={`w-full flex items-center justify-between rounded-xl px-4 py-3 transition-colors ${selected ? 'border border-blue-700' : 'bg-gray-800 border border-transparent'}`}
                 >
                   <div className="flex items-center gap-3">
-                    <span className={`font-bold w-8 ${selected ? 'text-indigo-300' : 'text-gray-500'}`}>#{p.number}</span>
+                    <span className={`font-bold w-8 ${selected ? 'text-blue-300' : 'text-gray-500'}`}>#{p.number}</span>
                     <span className={selected ? 'text-white' : 'text-gray-500'}>{p.name}</span>
                   </div>
                   <span className="text-lg">{selected ? '✓' : '○'}</span>
@@ -122,7 +122,7 @@ export default function MatchSetup({ onStart, onBack }) {
         <div className="text-center text-gray-500 text-sm mb-3">{selectedIds.size} jugadoras seleccionadas</div>
         <button
           onClick={startMatch}
-          className="w-full bg-green-600 active:bg-green-700 text-white font-bold py-4 rounded-2xl text-lg"
+          className="w-full bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-2xl text-lg"
         >
           ¡Empezar partido! →
         </button>
