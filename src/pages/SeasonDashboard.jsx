@@ -1,4 +1,5 @@
 import { loadData, getPlayerStats, SHOT_TYPES } from '../data/store'
+import { printSeasonReport, printPlayerSeasonReport } from '../reports/generateReport'
 
 export default function SeasonDashboard({ onBack, onOpenMatch }) {
   const data = loadData()
@@ -77,7 +78,10 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
   return (
     <div style={page}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
-        <button onClick={onBack} style={linkBtn}>← Volver</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <button onClick={onBack} style={linkBtn}>← Volver</button>
+          <button onClick={() => printSeasonReport(matches, playerMap)} style={exportBtn}>📄 Exportar PDF</button>
+        </div>
         <h1 style={h1}>Temporada</h1>
         <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>{matches.length} partido{matches.length !== 1 ? 's' : ''} registrado{matches.length !== 1 ? 's' : ''}</p>
       </div>
@@ -105,12 +109,12 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
             <StatCard label="Goles" value={totalGoals} color="#4ade80" />
             <StatCard label="Fallos" value={totalMisses} color="#facc15" />
-            <StatCard label={shootingPct != null ? `Eficacia ${shootingPct}%` : 'Lanz.'} value={totalGoals + totalMisses} color="#a78bfa" />
+            <PctStatCard label="Eficacia" success={totalGoals} total={totalGoals + totalMisses} color="#a78bfa" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
             <StatCard label="Paradas" value={totalSaves} color="#60a5fa" />
             <StatCard label="Encajados" value={totalConceded} color="#c084fc" />
-            <StatCard label={savePct != null ? `% paradas ${savePct}%` : 'Dispar.'} value={totalSaves + totalConceded} color="#818cf8" />
+            <PctStatCard label="% Paradas" success={totalSaves} total={totalSaves + totalConceded} color="#818cf8" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <StatCard label="Exclusiones" value={totalExclusions} color="#f87171" />
@@ -130,7 +134,8 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
           <Section title="Ranking goleadoras">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {scorers.map((p, i) => (
-                <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="scorer" />
+                <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="scorer"
+                  onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)))} />
               ))}
             </div>
           </Section>
@@ -141,7 +146,8 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
           <Section title="Ranking porteras">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {goalkeepers.map((p, i) => (
-                <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="goalkeeper" />
+                <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="goalkeeper"
+                  onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)))} />
               ))}
             </div>
           </Section>
@@ -181,6 +187,17 @@ function StatCard({ label, value, color }) {
   )
 }
 
+function PctStatCard({ label, success, total, color }) {
+  const pct = total > 0 ? Math.round(success / total * 100) : null
+  return (
+    <div style={{ background: '#1f2937', borderRadius: 12, padding: '12px 8px', textAlign: 'center' }}>
+      <div style={{ color, fontSize: 22, fontWeight: 700 }}>{pct != null ? `${pct}%` : '-'}</div>
+      <div style={{ color, fontSize: 12, fontWeight: 600, opacity: 0.7 }}>{total > 0 ? `${success}/${total}` : '0/0'}</div>
+      <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>{label}</div>
+    </div>
+  )
+}
+
 function ResultBar({ wins, draws, losses }) {
   const total = wins + draws + losses
   return (
@@ -192,7 +209,7 @@ function ResultBar({ wins, draws, losses }) {
   )
 }
 
-function PlayerRankRow({ player, rank, mode }) {
+function PlayerRankRow({ player, rank, mode, onExport }) {
   const s = player.stats
   const isGK = mode === 'goalkeeper'
   const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`
@@ -213,6 +230,9 @@ function PlayerRankRow({ player, rank, mode }) {
           <div style={{ color: '#4ade80', fontWeight: 700, fontSize: 18 }}>{s.goals} goles</div>
           <div style={{ color: '#6b7280', fontSize: 11 }}>{s.shootingPct != null ? `${s.shootingPct}% eficacia` : `${s.goals + s.misses} lanz.`}</div>
         </div>
+      )}
+      {onExport && (
+        <button onClick={onExport} style={{ background: '#1e1b4b', color: '#a5b4fc', border: '1px solid #3730a3', borderRadius: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}>📄</button>
       )}
     </div>
   )
@@ -284,4 +304,5 @@ function LegendDot({ color, label }) {
 
 const page = { minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }
 const linkBtn = { color: '#9ca3af', background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 8, display: 'block' }
+const exportBtn = { background: '#312e81', color: '#a5b4fc', border: '1px solid #4338ca', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }
 const h1 = { margin: '4px 0 0', fontSize: 26, fontWeight: 700 }

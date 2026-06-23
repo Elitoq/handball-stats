@@ -16,6 +16,7 @@ export default function MatchLive({ matchId, onBack, onStats }) {
   const [modal, setModal] = useState(null)
   const [minute, setMinute] = useState(0)
   const [running, setRunning] = useState(false)
+  const [period, setPeriod] = useState(1)
   const intervalRef = useRef(null)
 
   const match = data.matches.find(m => m.id === matchId)
@@ -50,7 +51,7 @@ export default function MatchLive({ matchId, onBack, onStats }) {
   const turnovers = match.events.filter(e => e.type === 'turnover').length
 
   function handleConfirm(details) {
-    const event = createEvent({ type: modal, playerId: details.playerId, minute, details })
+    const event = createEvent({ type: modal, playerId: details.playerId, minute, period, details })
     const updated = {
       ...data,
       matches: data.matches.map(m => {
@@ -65,12 +66,25 @@ export default function MatchLive({ matchId, onBack, onStats }) {
     setModal(null)
   }
 
-  function undoLast() {
+  function deleteEvent(id) {
+    const ev = match.events.find(e => e.id === id)
     const updated = {
       ...data,
-      matches: data.matches.map(m =>
-        m.id === matchId ? { ...m, events: m.events.slice(0, -1) } : m
-      ),
+      matches: data.matches.map(m => {
+        if (m.id !== matchId) return m
+        const base = { ...m, events: m.events.filter(e => e.id !== id) }
+        if (ev?.type === 'conceded') base.rivalGoals = Math.max(0, (m.rivalGoals ?? 0) - 1)
+        return base
+      }),
+    }
+    setData(updated)
+    saveData(updated)
+  }
+
+  function saveNotes(notes) {
+    const updated = {
+      ...data,
+      matches: data.matches.map(m => m.id === matchId ? { ...m, notes } : m),
     }
     setData(updated)
     saveData(updated)
@@ -100,6 +114,9 @@ export default function MatchLive({ matchId, onBack, onStats }) {
                 📊 Stats
               </button>
             )}
+            <button onClick={() => setModal('notes')} className="text-gray-400 text-sm font-medium">
+              📝
+            </button>
             <button onClick={finishMatch} className="text-red-400 text-sm font-medium">
               Finalizar
             </button>
@@ -120,8 +137,24 @@ export default function MatchLive({ matchId, onBack, onStats }) {
           </div>
         </div>
 
+        {/* Period indicator */}
+        <div className="flex items-center justify-center gap-3 mt-3">
+          <div className="flex rounded-full overflow-hidden border border-gray-700">
+            <div className={`px-4 py-1 text-sm font-semibold ${period === 1 ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-500'}`}>1ª</div>
+            <div className={`px-4 py-1 text-sm font-semibold ${period === 2 ? 'bg-indigo-600 text-white' : 'bg-gray-800 text-gray-500'}`}>2ª</div>
+          </div>
+          {period === 1 ? (
+            <button
+              onClick={() => { setPeriod(2); setRunning(false); setMinute(30) }}
+              className="text-indigo-400 text-xs font-medium border border-indigo-800 rounded-full px-3 py-1"
+            >→ 2ª parte</button>
+          ) : (
+            <span className="text-gray-600 text-xs">Segunda parte</span>
+          )}
+        </div>
+
         {/* Timer */}
-        <div className="flex items-center justify-center gap-3 mt-4">
+        <div className="flex items-center justify-center gap-3 mt-3">
           <button
             onClick={() => setMinute(m => Math.max(0, m - 1))}
             className="bg-gray-800 text-white w-8 h-8 rounded-full text-lg leading-none"
@@ -172,17 +205,24 @@ export default function MatchLive({ matchId, onBack, onStats }) {
         <div className="px-4 pb-4">
           <div className="flex items-center justify-between mb-2">
             <span className="text-gray-500 text-xs uppercase tracking-wide">Últimas acciones</span>
-            <button onClick={undoLast} className="text-red-400 text-xs">Deshacer última</button>
           </div>
           <div className="space-y-1 max-h-36 overflow-y-auto">
             {[...match.events].reverse().slice(0, 8).map(ev => (
-              <EventRow key={ev.id} event={ev} players={match.players} />
+              <EventRow key={ev.id} event={ev} players={match.players} onDelete={deleteEvent} />
             ))}
           </div>
         </div>
       )}
 
-      {modal && (
+      {modal === 'notes' && (
+        <NotesModal
+          notes={match.notes ?? ''}
+          onSave={notes => { saveNotes(notes); setModal(null) }}
+          onClose={() => setModal(null)}
+        />
+      )}
+
+      {modal && modal !== 'notes' && (
         <ActionModal
           type={modal}
           players={match.players}
@@ -195,9 +235,9 @@ export default function MatchLive({ matchId, onBack, onStats }) {
   )
 }
 
-const TYPE_LABELS = { goal: '⚽ Gol', save: '🧤 Parada', exclusion: '🟥 Exclusión', turnover: '❌ Pérdida' }
+const TYPE_LABELS = { goal: '⚽ Gol', miss: '🎯 Fallo', save: '🧤 Parada', conceded: '😔 Encajado', exclusion: '🟥 Exclusión', turnover: '❌ Pérdida' }
 
-function EventRow({ event, players }) {
+function EventRow({ event, players, onDelete }) {
   const player = players.find(p => p.id === event.playerId)
   return (
     <div className="flex items-center justify-between bg-gray-800 rounded-lg px-3 py-2">
@@ -205,6 +245,31 @@ function EventRow({ event, players }) {
       <div className="flex items-center gap-2">
         {player && <span className="text-gray-400 text-xs">#{player.number} {player.name}</span>}
         <span className="text-gray-600 text-xs">{event.minute}'</span>
+        <button
+          onClick={() => onDelete(event.id)}
+          className="text-red-500 text-xs px-1.5 py-0.5 rounded bg-red-950 active:bg-red-900"
+        >✕</button>
+      </div>
+    </div>
+  )
+}
+
+function NotesModal({ notes, onSave, onClose }) {
+  const [text, setText] = useState(notes)
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+      <div style={{ background: '#1f2937', width: '100%', borderRadius: '20px 20px 0 0', padding: 24 }}>
+        <div style={{ fontSize: 16, fontWeight: 700, color: 'white', marginBottom: 12 }}>📝 Notas del partido</div>
+        <textarea
+          value={text}
+          onChange={e => setText(e.target.value)}
+          placeholder="Sin Laura #7. Rival muy físico. Segunda parte cayó la intensidad defensiva..."
+          style={{ width: '100%', background: '#111827', color: 'white', border: '1px solid #374151', borderRadius: 10, padding: 12, fontSize: 14, minHeight: 120, resize: 'none', outline: 'none', boxSizing: 'border-box' }}
+        />
+        <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+          <button onClick={onClose} style={{ flex: 1, background: '#374151', color: '#9ca3af', border: 'none', borderRadius: 12, padding: '12px 0', fontSize: 15, cursor: 'pointer' }}>Cancelar</button>
+          <button onClick={() => onSave(text)} style={{ flex: 2, background: '#4f46e5', color: 'white', border: 'none', borderRadius: 12, padding: '12px 0', fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Guardar</button>
+        </div>
       </div>
     </div>
   )

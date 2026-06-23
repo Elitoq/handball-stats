@@ -1,5 +1,6 @@
-import { useState } from 'react'
-import { loadData, getPlayerStats, GOAL_ZONES, SHOT_TYPES } from '../data/store'
+import { useState, useMemo } from 'react'
+import { loadData, getPlayerStats, calcPlayerRating, ratingLabel, ratingColor, GOAL_ZONES, SHOT_TYPES } from '../data/store'
+import { printMatchReport, printPlayerMatchReport } from '../reports/generateReport'
 
 const ZONE_LABELS = GOAL_ZONES.slice(0, 6).map(z =>
   z.replace(' alto', '↑').replace(' bajo', '↓').replace('Izq.', 'I').replace('Der.', 'D').replace('Centro', 'C')
@@ -15,6 +16,7 @@ export default function MatchStats({ matchId, onBack }) {
     const player = match.players.find(p => p.id === selectedPlayer)
     return (
       <PlayerDetail
+        match={match}
         player={player}
         stats={getPlayerStats(match, selectedPlayer)}
         onBack={() => setSelectedPlayer(null)}
@@ -28,15 +30,25 @@ export default function MatchStats({ matchId, onBack }) {
 // ── Team overview ──────────────────────────────────────────────
 
 function TeamOverview({ match, onSelectPlayer, onBack }) {
-  const goals = match.events.filter(e => e.type === 'goal')
-  const misses = match.events.filter(e => e.type === 'miss')
-  const saves = match.events.filter(e => e.type === 'save')
-  const conceded = match.events.filter(e => e.type === 'conceded')
-  const exclusions = match.events.filter(e => e.type === 'exclusion')
-  const turnovers = match.events.filter(e => e.type === 'turnover')
+  const [periodFilter, setPeriodFilter] = useState(0) // 0=todo, 1=1ª, 2=2ª
 
+  const hasPeriods = match.events.some(e => e.period === 2)
+
+  const evs = useMemo(() =>
+    periodFilter === 0 ? match.events : match.events.filter(e => (e.period ?? 1) === periodFilter),
+    [match.events, periodFilter]
+  )
+
+  const goals = evs.filter(e => e.type === 'goal')
+  const misses = evs.filter(e => e.type === 'miss')
+  const saves = evs.filter(e => e.type === 'save')
+  const conceded = evs.filter(e => e.type === 'conceded')
+  const exclusions = evs.filter(e => e.type === 'exclusion')
+  const turnovers = evs.filter(e => e.type === 'turnover')
+
+  const filteredMatch = periodFilter === 0 ? match : { ...match, events: evs }
   const playersWithStats = match.players
-    .map(p => ({ ...p, stats: getPlayerStats(match, p.id) }))
+    .map(p => ({ ...p, stats: getPlayerStats(filteredMatch, p.id) }))
     .filter(p => {
       const s = p.stats
       return s.goals + s.saves + s.exclusions + s.turnovers > 0
@@ -46,9 +58,27 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
   return (
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
-        <button onClick={onBack} style={linkBtn}>← Volver</button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <button onClick={onBack} style={linkBtn}>← Volver</button>
+          <button onClick={() => printMatchReport(match)} style={exportBtn}>📄 Exportar PDF</button>
+        </div>
         <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{match.teamName} vs {match.rival}</div>
         <div style={{ color: '#6b7280', fontSize: 13 }}>{match.date}</div>
+        {hasPeriods && (
+          <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
+            {[['Todo el partido', 0], ['1ª parte', 1], ['2ª parte', 2]].map(([label, val]) => (
+              <button
+                key={val}
+                onClick={() => setPeriodFilter(val)}
+                style={{
+                  padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
+                  background: periodFilter === val ? '#4f46e5' : '#1f2937',
+                  color: periodFilter === val ? 'white' : '#6b7280',
+                }}
+              >{label}</button>
+            ))}
+          </div>
+        )}
       </div>
 
       <div style={{ padding: '0 16px 32px' }}>
@@ -57,12 +87,12 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
             <StatCard label="Goles" value={goals.length} color="#4ade80" />
             <StatCard label="Fallos" value={misses.length} color="#facc15" />
-            <StatCard label={goals.length + misses.length > 0 ? `Eficacia ${Math.round(goals.length/(goals.length+misses.length)*100)}%` : 'Lanz.'} value={goals.length + misses.length} color="#a78bfa" />
+            <PctStatCard label="Eficacia" success={goals.length} total={goals.length + misses.length} color="#a78bfa" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
             <StatCard label="Paradas" value={saves.length} color="#60a5fa" />
             <StatCard label="Encajados" value={conceded.length} color="#c084fc" />
-            <StatCard label={saves.length + conceded.length > 0 ? `% paradas ${Math.round(saves.length/(saves.length+conceded.length)*100)}%` : 'Dispar.'} value={saves.length + conceded.length} color="#818cf8" />
+            <PctStatCard label="% Paradas" success={saves.length} total={saves.length + conceded.length} color="#818cf8" />
           </div>
         </Section>
 
@@ -80,6 +110,32 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           </Section>
         )}
 
+        {/* Jugadora del partido */}
+        {playersWithStats.length > 0 && (() => {
+          const rated = playersWithStats
+            .map(p => ({ ...p, rating: calcPlayerRating(p.stats, p.role) }))
+            .filter(p => p.rating != null)
+            .sort((a, b) => b.rating - a.rating)
+          const mvp = rated[0]
+          if (!mvp) return null
+          const rc = ratingColor(mvp.rating)
+          return (
+            <Section title="Jugadora del partido">
+              <div style={{ background: 'linear-gradient(135deg,#1e1b4b,#312e81)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
+                <div style={{ fontSize: 36 }}>🏅</div>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontWeight: 700, fontSize: 17 }}>#{mvp.number} {mvp.name}</div>
+                  <div style={{ color: '#a5b4fc', fontSize: 12, marginTop: 2 }}>{mvp.role === 'goalkeeper' ? '🧤 Portera' : '🤾 Jugadora'}</div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ color: rc, fontWeight: 900, fontSize: 32, lineHeight: 1 }}>{mvp.rating.toFixed(1)}</div>
+                  <div style={{ color: rc, fontSize: 10, opacity: 0.9 }}>{ratingLabel(mvp.rating)}</div>
+                </div>
+              </div>
+            </Section>
+          )
+        })()}
+
         {/* Lista de jugadoras */}
         {playersWithStats.length > 0 && (
           <Section title="Jugadoras — toca para ver detalle">
@@ -91,10 +147,19 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           </Section>
         )}
 
+        {/* Notas */}
+        {match.notes && (
+          <Section title="Notas del partido">
+            <div style={{ background: '#1f2937', borderRadius: 12, padding: '14px 16px', color: '#d1d5db', fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
+              {match.notes}
+            </div>
+          </Section>
+        )}
+
         {/* Timeline */}
-        {match.events.length > 0 && (
+        {evs.length > 0 && (
           <Section title="Eventos">
-            <Timeline events={match.events} players={match.players} />
+            <Timeline events={evs} players={match.players} />
           </Section>
         )}
       </div>
@@ -104,19 +169,35 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
 
 // ── Player detail ──────────────────────────────────────────────
 
-function PlayerDetail({ player, stats, onBack }) {
+function PlayerDetail({ match, player, stats, onBack }) {
   const isGoalkeeper = player?.role === 'goalkeeper'
 
   return (
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
-        <button onClick={onBack} style={linkBtn}>← Equipo</button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 8 }}>
-          <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 20 }}>#{player?.number}</span>
-          <div>
-            <div style={{ fontSize: 18, fontWeight: 700 }}>{player?.name}</div>
-            <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? '🧤 Portera' : '🤾 Jugadora'}</div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+          <button onClick={onBack} style={linkBtn}>← Equipo</button>
+          <button onClick={() => printPlayerMatchReport(match, player?.id)} style={exportBtn}>📄 Exportar PDF</button>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <span style={{ color: '#818cf8', fontWeight: 700, fontSize: 20 }}>#{player?.number}</span>
+            <div>
+              <div style={{ fontSize: 18, fontWeight: 700 }}>{player?.name}</div>
+              <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? '🧤 Portera' : '🤾 Jugadora'}</div>
+            </div>
           </div>
+          {(() => {
+            const rating = calcPlayerRating(stats, player?.role)
+            if (rating == null) return null
+            const rc = ratingColor(rating)
+            return (
+              <div style={{ textAlign: 'center', background: '#1f2937', borderRadius: 12, padding: '8px 14px' }}>
+                <div style={{ color: rc, fontWeight: 800, fontSize: 28, lineHeight: 1 }}>{rating.toFixed(1)}</div>
+                <div style={{ color: rc, fontSize: 10, opacity: 0.85, marginTop: 2 }}>{ratingLabel(rating)}</div>
+              </div>
+            )
+          })()}
         </div>
       </div>
 
@@ -138,7 +219,7 @@ function FieldPlayerStats({ stats }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
           <StatCard label="Goles" value={stats.goals} color="#4ade80" />
           <StatCard label="Fallos" value={stats.misses} color="#facc15" />
-          <StatCard label={stats.shootingPct != null ? `Eficacia ${stats.shootingPct}%` : 'Lanzamientos'} value={totalShots} color="#a78bfa" />
+          <PctStatCard label="Eficacia" success={stats.goals} total={totalShots} color="#a78bfa" />
         </div>
         {stats.shootingPct != null && (
           <EfficiencyBar pct={stats.shootingPct} color="#16a34a" label={`${stats.goals} goles de ${totalShots} lanzamientos`} />
@@ -187,7 +268,7 @@ function GoalkeeperStats({ stats }) {
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
           <StatCard label="Paradas" value={stats.saves} color="#60a5fa" />
           <StatCard label="Encajados" value={stats.conceded} color="#c084fc" />
-          <StatCard label={stats.savePct != null ? `Eficacia ${stats.savePct}%` : 'Disparos'} value={totalShots} color="#a78bfa" />
+          <PctStatCard label="% Paradas" success={stats.saves} total={totalShots} color="#a78bfa" />
         </div>
         {stats.savePct != null && (
           <EfficiencyBar pct={stats.savePct} color="#2563eb" label={`${stats.saves} paradas de ${totalShots} disparos`} />
@@ -239,9 +320,22 @@ function StatCard({ label, value, color }) {
   )
 }
 
+function PctStatCard({ label, success, total, color }) {
+  const pct = total > 0 ? Math.round(success / total * 100) : null
+  return (
+    <div style={{ background: '#1f2937', borderRadius: 12, padding: '12px 8px', textAlign: 'center' }}>
+      <div style={{ color, fontSize: 24, fontWeight: 700 }}>{pct != null ? `${pct}%` : '-'}</div>
+      <div style={{ color, fontSize: 13, fontWeight: 600, opacity: 0.7 }}>{total > 0 ? `${success}/${total}` : '0/0'}</div>
+      <div style={{ color: '#6b7280', fontSize: 11, marginTop: 2 }}>{label}</div>
+    </div>
+  )
+}
+
 function PlayerRow({ player, onSelect }) {
   const s = player.stats
   const isGK = player.role === 'goalkeeper'
+  const rating = calcPlayerRating(s, player.role)
+  const rColor = ratingColor(rating)
   return (
     <button onClick={onSelect} style={{ width: '100%', background: '#1f2937', border: 'none', borderRadius: 14, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', color: 'white' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -252,7 +346,15 @@ function PlayerRow({ player, onSelect }) {
             <div style={{ color: '#6b7280', fontSize: 12 }}>{isGK ? '🧤 Portera' : '🤾 Jugadora'}</div>
           </div>
         </div>
-        <span style={{ color: '#6b7280', fontSize: 13 }}>Ver →</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {rating != null && (
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ color: rColor, fontWeight: 800, fontSize: 20, lineHeight: 1 }}>{rating.toFixed(1)}</div>
+              <div style={{ color: rColor, fontSize: 9, opacity: 0.8 }}>{ratingLabel(rating)}</div>
+            </div>
+          )}
+          <span style={{ color: '#6b7280', fontSize: 13 }}>→</span>
+        </div>
       </div>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', textAlign: 'center' }}>
         {(isGK
@@ -518,3 +620,4 @@ function Timeline({ events, players }) {
 }
 
 const linkBtn = { color: '#9ca3af', background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', padding: 0 }
+const exportBtn = { background: '#312e81', color: '#a5b4fc', border: '1px solid #4338ca', borderRadius: 8, padding: '6px 12px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }
