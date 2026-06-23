@@ -600,11 +600,11 @@ function mvpBlock(match) {
   return `
     <div class="section">
       <h2>Jugadora del partido</h2>
-      <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#1e1b4b,#312e81);border-radius:12px;padding:16px 20px;color:white">
-        <div style="font-size:32px">🏅</div>
+      <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#0a1628,#0d2456);border-radius:12px;padding:16px 20px;color:white">
+        <div style="font-size:32px;color:#7eb3ff">★</div>
         <div style="flex:1">
           <div style="font-weight:800;font-size:18px">#${mvp.number} ${mvp.name}</div>
-          <div style="color:#a5b4fc;font-size:12px;margin-top:2px">${mvp.role === 'goalkeeper' ? '🧤 Portera' : '🤾 Jugadora'}</div>
+          <div style="color:#7eb3ff;font-size:12px;margin-top:2px">${mvp.role === 'goalkeeper' ? 'Portera' : 'Jugadora'}</div>
         </div>
         <div style="text-align:center;background:${bg};border-radius:10px;padding:8px 16px">
           <div style="color:${color};font-weight:900;font-size:36px;line-height:1">${mvp.rating.toFixed(1)}</div>
@@ -670,13 +670,13 @@ function printCSS() {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13px; color: #1f2937; background: white; padding: 0; }
 
-    .report-header { background: linear-gradient(135deg, #1e1b4b 0%, #312e81 60%, #4338ca 100%); color: white; padding: 28px 32px 24px; margin-bottom: 0; }
-    .report-badge { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #a5b4fc; margin-bottom: 6px; }
+    .report-header { background: linear-gradient(135deg, #0a1628 0%, #0d2456 60%, #1e3a7a 100%); color: white; padding: 28px 32px 24px; margin-bottom: 0; }
+    .report-badge { font-size: 11px; font-weight: 700; letter-spacing: 1.5px; text-transform: uppercase; color: #7eb3ff; margin-bottom: 6px; }
     .report-header h1 { font-size: 26px; font-weight: 800; letter-spacing: -0.5px; color: white; margin-bottom: 4px; }
-    .report-sub { font-size: 13px; color: #c7d2fe; }
+    .report-sub { font-size: 13px; color: #93c5fd; }
 
     .section { padding: 20px 32px; border-bottom: 1px solid #f3f4f6; }
-    .section h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #6366f1; margin-bottom: 14px; }
+    .section h2 { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #1e3a7a; margin-bottom: 14px; }
 
     .stats-grid-3 { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
     .stats-grid-2 { display: grid; grid-template-columns: repeat(2,1fr); gap: 8px; }
@@ -686,15 +686,15 @@ function printCSS() {
     .stat-box.blue   { background: #eff6ff; border-color: #93c5fd; }
     .stat-box.red    { background: #fef2f2; border-color: #fca5a5; }
     .stat-box.orange { background: #fff7ed; border-color: #fdba74; }
-    .stat-box.purple { background: #faf5ff; border-color: #d8b4fe; }
-    .stat-box.indigo { background: #eef2ff; border-color: #a5b4fc; }
+    .stat-box.purple { background: #eff6ff; border-color: #93c5fd; }
+    .stat-box.indigo { background: #eff6ff; border-color: #93c5fd; }
     .stat-value { font-size: 28px; font-weight: 800; line-height: 1; margin-bottom: 4px; }
     .stat-box.green  .stat-value { color: #15803d; }
     .stat-box.blue   .stat-value { color: #1d4ed8; }
     .stat-box.red    .stat-value { color: #dc2626; }
     .stat-box.orange .stat-value { color: #c2410c; }
-    .stat-box.purple .stat-value { color: #7c3aed; }
-    .stat-box.indigo .stat-value { color: #4338ca; }
+    .stat-box.purple .stat-value { color: #1d4ed8; }
+    .stat-box.indigo .stat-value { color: #1d4ed8; }
     .stat-label { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px; color: #6b7280; }
 
     .result-bar { display: flex; height: 8px; border-radius: 99px; overflow: hidden; gap: 2px; margin-top: 10px; }
@@ -710,7 +710,7 @@ function printCSS() {
     .num { text-align: center; font-weight: 700; }
     .role { color: #6b7280; font-size: 11px; }
     .green { color: #15803d; } .blue { color: #1d4ed8; } .red { color: #dc2626; }
-    .orange { color: #c2410c; } .purple { color: #7c3aed; } .indigo { color: #4338ca; }
+    .orange { color: #c2410c; } .purple { color: #1d4ed8; } .indigo { color: #1d4ed8; }
 
     .zone-map-wrap { max-width: 340px; }
     .zone-map-label { font-size: 11px; color: #6b7280; text-align: center; margin-bottom: 4px; }

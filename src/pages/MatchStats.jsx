@@ -73,8 +73,8 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
                 onClick={() => setPeriodFilter(val)}
                 style={{
                   padding: '5px 12px', borderRadius: 999, fontSize: 12, fontWeight: 600, cursor: 'pointer', border: 'none',
-                  background: periodFilter === val ? '#4f46e5' : '#1f2937',
-                  color: periodFilter === val ? 'white' : '#6b7280',
+                  background: periodFilter === val ? '#1e3a7a' : '#1f2937',
+                  color: periodFilter === val ? '#7eb3ff' : '#6b7280',
                 }}
               >{label}</button>
             ))}
@@ -92,7 +92,7 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
             <StatCard label="Paradas" value={saves.length} color="#60a5fa" />
-            <StatCard label="Encajados" value={conceded.length} color="#c084fc" />
+            <StatCard label="Encajados" value={conceded.length} color="#f87171" />
             <PctStatCard label="% Paradas" success={saves.length} total={saves.length + conceded.length} color="#7eb3ff" />
           </div>
         </Section>
@@ -268,7 +268,7 @@ function GoalkeeperStats({ stats }) {
       <Section title="Resumen bajo palos">
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
           <StatCard label="Paradas" value={stats.saves} color="#60a5fa" />
-          <StatCard label="Encajados" value={stats.conceded} color="#c084fc" />
+          <StatCard label="Encajados" value={stats.conceded} color="#f87171" />
           <PctStatCard label="% Paradas" success={stats.saves} total={totalShots} color="#7eb3ff" />
         </div>
         {stats.savePct != null && (
@@ -361,14 +361,14 @@ function PlayerRow({ player, onSelect }) {
         {(isGK
           ? [
               { label: 'Paradas', value: s.saves, color: '#60a5fa' },
-              { label: 'Encajados', value: s.conceded, color: '#c084fc' },
-              { label: s.savePct != null ? `${s.savePct}%` : '-', value: '⛔', color: '#7eb3ff' },
+              { label: 'Encajados', value: s.conceded, color: '#f87171' },
+              { label: '% Par.', value: s.savePct != null ? `${s.savePct}%` : '-', color: '#7eb3ff' },
               { label: 'Exclus.', value: s.exclusions, color: '#f87171' },
             ]
           : [
               { label: 'Goles', value: s.goals, color: '#4ade80' },
               { label: 'Fallos', value: s.misses, color: '#facc15' },
-              { label: s.shootingPct != null ? `${s.shootingPct}%` : '-', value: '🎯', color: '#7eb3ff' },
+              { label: 'Eficacia', value: s.shootingPct != null ? `${s.shootingPct}%` : '-', color: '#7eb3ff' },
               { label: 'Pérd.', value: s.turnovers, color: '#fb923c' },
             ]
         ).map(({ label, value, color }) => (

@@ -110,12 +110,12 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
             <StatCard label="Goles" value={totalGoals} color="#4ade80" />
             <StatCard label="Fallos" value={totalMisses} color="#facc15" />
-            <PctStatCard label="Eficacia" success={totalGoals} total={totalGoals + totalMisses} color="#a78bfa" />
+            <PctStatCard label="Eficacia" success={totalGoals} total={totalGoals + totalMisses} color="#7eb3ff" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
             <StatCard label="Paradas" value={totalSaves} color="#60a5fa" />
-            <StatCard label="Encajados" value={totalConceded} color="#c084fc" />
-            <PctStatCard label="% Paradas" success={totalSaves} total={totalSaves + totalConceded} color="#818cf8" />
+            <StatCard label="Encajados" value={totalConceded} color="#f87171" />
+            <PctStatCard label="% Paradas" success={totalSaves} total={totalSaves + totalConceded} color="#7eb3ff" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <StatCard label="Exclusiones" value={totalExclusions} color="#f87171" />

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { GOAL_ZONES, SHOT_TYPES, MISS_REASONS, EXCLUSION_TYPES, TURNOVER_TYPES } from '../data/store'
 
 const LABELS = { goal: 'Gol', miss: 'Fallo', save: 'Parada', conceded: 'Encajado', exclusion: 'Exclusión', turnover: 'Pérdida' }
-const COLORS = { goal: '#16a34a', miss: '#ca8a04', save: '#2563eb', conceded: '#7c3aed', exclusion: '#dc2626', turnover: '#f97316' }
+const COLORS = { goal: '#16a34a', miss: '#ca8a04', save: '#2563eb', conceded: '#f43f5e', exclusion: '#dc2626', turnover: '#f97316' }
 
 export default function ActionModal({ type, players, minute, onConfirm, onClose }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
