@@ -26,7 +26,7 @@ I play handball, so I built the tool I actually wanted on the bench: something y
 - **Season dashboard** — aggregated stats across all matches, scorer and goalkeeper rankings, and goal charts.
 - **Performance rating** — a transparent rating model that scores each player's game (see [below](#performance-rating)).
 - **PDF reports** — four report types: match, player-in-match, season, and player-in-season.
-- **Works offline** — installable PWA, all data stored locally on the device.
+- **No backend** — all data stored in `localStorage` on the device; nothing leaves the browser.
 
 ---
 
