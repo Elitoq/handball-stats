@@ -1,6 +1,11 @@
-const STORAGE_KEY = 'handball_data'
+import { db } from '../firebase'
+import { doc, getDoc, setDoc } from 'firebase/firestore'
 
+const STORAGE_KEY = 'handball_data'
 const defaultData = { squad: [], matches: [] }
+
+let _uid = null
+export function setFirebaseUser(uid) { _uid = uid }
 
 function uid() {
   return Date.now().toString(36) + Math.random().toString(36).slice(2)
@@ -19,6 +24,26 @@ export function loadData() {
 
 export function saveData(data) {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(data))
+  if (_uid) {
+    setDoc(doc(db, 'users', _uid), data).catch(() => {})
+  }
+}
+
+// Pull from Firestore on login. If cloud is empty, push local data up.
+export async function syncOnLogin(uid) {
+  setFirebaseUser(uid)
+  try {
+    const snap = await getDoc(doc(db, 'users', uid))
+    if (snap.exists()) {
+      const cloudData = { ...defaultData, ...snap.data(), squad: snap.data().squad ?? [] }
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cloudData))
+    } else {
+      const localData = loadData()
+      await setDoc(doc(db, 'users', uid), localData)
+    }
+  } catch (e) {
+    console.error('Firebase sync error:', e)
+  }
 }
 
 export function createMatch({ teamName, rival, date, players }) {
