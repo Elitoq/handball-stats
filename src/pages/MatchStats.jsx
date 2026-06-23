@@ -100,14 +100,14 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
         {/* Mapa de goles del equipo */}
         {goals.length > 0 && (
           <Section title="Mapa de goles del equipo">
-            <ZoneHeatmap events={goals} color="#16a34a" />
+            <ZoneHeatmap successEvents={goals} totalEvents={[...goals, ...misses]} color="#16a34a" />
           </Section>
         )}
 
         {/* Mapa de paradas del equipo */}
         {saves.length > 0 && (
           <Section title="Mapa de paradas del equipo">
-            <ZoneHeatmap events={saves} color="#2563eb" />
+            <ZoneHeatmap successEvents={saves} totalEvents={[...saves, ...conceded]} color="#2563eb" />
           </Section>
         )}
 
@@ -383,48 +383,54 @@ function PlayerRow({ player, onSelect }) {
 }
 
 // Mapa de distribución para equipo: muestra count/total y %
-function ZoneHeatmap({ events, color }) {
+function ZoneHeatmap({ successEvents, totalEvents, color }) {
   const zones = GOAL_ZONES.slice(0, 6)
-  const allZones = events.map(e => e.details?.zone).filter(Boolean)
-  const total = allZones.length
-  const counts = zones.map(z => allZones.filter(x => x === z).length)
-  const max = Math.max(...counts, 1)
   const isBlue = color.includes('2563')
 
-  function cellBg(count) {
-    if (count === 0) return '#111827'
-    const t = count / max
+  const data = zones.map(z => {
+    const success = successEvents.filter(e => e.details?.zone === z).length
+    const total = totalEvents.filter(e => e.details?.zone === z).length
+    const pct = total > 0 ? Math.round(success / total * 100) : null
+    return { success, total, pct }
+  })
+
+  const maxSuccess = Math.max(...data.map(d => d.success), 1)
+
+  function cellBg(success) {
+    if (success === 0) return '#111827'
+    const t = success / maxSuccess
     if (isBlue) return t < 0.4 ? '#1e3a5f' : t < 0.7 ? '#1d4ed8' : '#3b82f6'
     return t < 0.4 ? '#14532d' : t < 0.7 ? '#15803d' : '#22c55e'
   }
+
+  const hasAny = data.some(d => d.total > 0)
 
   return (
     <div style={{ background: '#1f2937', borderRadius: 12, padding: 12 }}>
       <div style={{ color: '#6b7280', fontSize: 11, textAlign: 'center', marginBottom: 8 }}>Portería</div>
       <div style={{ border: '2px solid #374151', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
-          {counts.slice(0, 3).map((count, i) => (
-            <DistCell key={i} label={ZONE_LABELS[i]} count={count} total={total} bg={cellBg(count)} border={i < 2} />
+          {data.slice(0, 3).map((d, i) => (
+            <DistCell key={i} label={ZONE_LABELS[i]} success={d.success} total={d.total} pct={d.pct} bg={cellBg(d.success)} border={i < 2} />
           ))}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderTop: '1px solid #374151' }}>
-          {counts.slice(3, 6).map((count, i) => (
-            <DistCell key={i+3} label={ZONE_LABELS[i+3]} count={count} total={total} bg={cellBg(count)} border={i < 2} />
+          {data.slice(3, 6).map((d, i) => (
+            <DistCell key={i+3} label={ZONE_LABELS[i+3]} success={d.success} total={d.total} pct={d.pct} bg={cellBg(d.success)} border={i < 2} />
           ))}
         </div>
       </div>
-      {total === 0 && (
+      {!hasAny && (
         <div style={{ color: '#4b5563', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Sin zona registrada</div>
       )}
     </div>
   )
 }
 
-function DistCell({ label, count, total, bg, border }) {
-  const pct = total > 0 ? Math.round(count / total * 100) : null
+function DistCell({ label, success, total, pct, bg, border }) {
   return (
     <div style={{ background: bg, padding: '12px 6px', textAlign: 'center', borderRight: border ? '1px solid #374151' : 'none' }}>
-      <div style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{count > 0 ? count : '-'}</div>
+      <div style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{total > 0 ? `${success}/${total}` : '-'}</div>
       <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>{pct != null ? `${pct}%` : ''}</div>
       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 1 }}>{label}</div>
     </div>
