@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { User, Shield, Award, FileText, ChevronLeft } from 'lucide-react'
+import { User, Shield, Award, FileText, ChevronLeft, Target, ShieldOff, UserMinus, ArrowRightLeft } from 'lucide-react'
 import { loadData, getPlayerStats, calcPlayerRating, ratingLabel, ratingColor, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 import { printMatchReport, printPlayerMatchReport } from '../reports/generateReport'
 
@@ -126,7 +126,7 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
                 <Award size={36} color="#7eb3ff" strokeWidth={1.5} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 17 }}>#{mvp.number} {mvp.name}</div>
-                  <div style={{ color: '#a5b4fc', fontSize: 12, marginTop: 2 }}>{mvp.role === 'goalkeeper' ? '🧤 Portera' : '🤾 Jugadora'}</div>
+                  <div style={{ color: '#7eb3ff', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>{mvp.role === 'goalkeeper' ? <><Shield size={11} /> Portera</> : <><User size={11} /> Jugadora</>}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ color: rc, fontWeight: 900, fontSize: 32, lineHeight: 1 }}>{mvp.rating.toFixed(1)}</div>
@@ -583,19 +583,26 @@ function MinuteChart({ events, goals = [] }) {
   )
 }
 
-const TYPE_ICONS = { goal: '⚽', save: '🧤', exclusion: '🟥', turnover: '❌' }
-const TYPE_LABELS = { goal: 'Gol', save: 'Parada', exclusion: 'Exclusión', turnover: 'Pérdida' }
+const TYPE_META = {
+  goal:      { label: 'Gol',       Icon: Target,         color: '#22c55e' },
+  miss:      { label: 'Fallo',     Icon: Target,         color: '#f59e0b' },
+  save:      { label: 'Parada',    Icon: Shield,         color: '#3b82f6' },
+  conceded:  { label: 'Encajado',  Icon: ShieldOff,      color: '#f43f5e' },
+  exclusion: { label: 'Exclusión', Icon: UserMinus,      color: '#ef4444' },
+  turnover:  { label: 'Pérdida',   Icon: ArrowRightLeft, color: '#f97316' },
+}
 
 function Timeline({ events, players }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {[...events].sort((a, b) => a.minute - b.minute).map(ev => {
         const player = players.find(p => p.id === ev.playerId)
+        const { label, Icon, color } = TYPE_META[ev.type] ?? { label: ev.type, Icon: Target, color: '#6b7280' }
         return (
           <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#1f2937', borderRadius: 10, padding: '10px 14px' }}>
             <span style={{ color: '#6b7280', fontSize: 12, minWidth: 28 }}>{ev.minute}'</span>
-            <span style={{ fontSize: 16 }}>{TYPE_ICONS[ev.type]}</span>
-            <span style={{ color: '#d1d5db', fontSize: 13, flex: 1 }}>{TYPE_LABELS[ev.type]}</span>
+            <Icon size={15} color={color} />
+            <span style={{ color: '#d1d5db', fontSize: 13, flex: 1 }}>{label}</span>
             {player && <span style={{ color: '#6b7280', fontSize: 12 }}>#{player.number} {player.name.split(' ')[0]}</span>}
           </div>
         )

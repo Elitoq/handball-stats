@@ -137,7 +137,7 @@ function buildMatchReport(match) {
             return `<tr>
               <td class="num">${p.number}</td>
               <td>${p.name}</td>
-              <td class="role">${p.role === 'goalkeeper' ? '🧤 Portera' : '🤾 Jugadora'}</td>
+              <td class="role">${p.role === 'goalkeeper' ? 'Portera' : 'Jugadora'}</td>
               <td class="num green">${s.goals}</td>
               <td class="num orange">${s.misses}</td>
               <td class="num purple">${eff}</td>
@@ -159,11 +159,11 @@ function buildMatchReport(match) {
       <div class="timeline">
         ${[...match.events].sort((a,b) => a.minute - b.minute).map(ev => {
           const player = match.players.find(p => p.id === ev.playerId)
-          const icons = { goal:'⚽', miss:'🎯', save:'🧤', conceded:'😔', exclusion:'🟥', turnover:'❌' }
           const labels = { goal:'Gol', miss:'Fallo', save:'Parada', conceded:'Encajado', exclusion:'Exclusión', turnover:'Pérdida' }
+          const dotColors = { goal:'#16a34a', miss:'#ca8a04', save:'#2563eb', conceded:'#dc2626', exclusion:'#dc2626', turnover:'#f97316' }
           return `<div class="timeline-row ${ev.type}">
             <span class="min">${ev.minute}'</span>
-            <span class="icon">${icons[ev.type]}</span>
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:${dotColors[ev.type]};flex-shrink:0"></span>
             <span class="label">${labels[ev.type]}</span>
             ${player ? `<span class="player">#${player.number} ${player.name}</span>` : ''}
           </div>`
@@ -193,7 +193,7 @@ function buildPlayerMatchReport(match, player, stats) {
     ${header(
       `#${player.number} ${player.name}`,
       match.date,
-      `${match.teamName} vs ${match.rival} · ${isGK ? '🧤 Portera' : '🤾 Jugadora'}`
+      `${match.teamName} vs ${match.rival} · ${isGK ? 'Portera' : 'Jugadora'}`
     )}
 
     <div class="section">
@@ -415,7 +415,7 @@ function buildPlayerSeasonReport(player, matches) {
     ${header(
       `#${player.number} ${player.name}`,
       'Informe de temporada',
-      `${isGK ? '🧤 Portera' : '🤾 Jugadora'} · ${matchRows.length} partidos`
+      `${isGK ? 'Portera' : 'Jugadora'} · ${matchRows.length} partidos`
     )}
 
     <div class="section">
@@ -727,7 +727,6 @@ function printCSS() {
     .timeline-row.exclusion{ background: #fef2f2; }
     .timeline-row.turnover { background: #fff7ed; }
     .timeline-row .min    { color: #9ca3af; font-size: 11px; min-width: 28px; font-weight: 700; }
-    .timeline-row .icon   { font-size: 14px; }
     .timeline-row .label  { font-weight: 600; flex: 1; }
     .timeline-row .player { color: #6b7280; font-size: 11px; }
 
