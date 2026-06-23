@@ -3,8 +3,8 @@ import { User, Shield, Users } from 'lucide-react'
 import { loadData, saveData, createPlayer } from '../data/store'
 
 const ROLE_OPTIONS = [
-  { value: 'player',     label: 'Jugadora', Icon: User   },
-  { value: 'goalkeeper', label: 'Portera',  Icon: Shield },
+  { value: 'player',     label: 'Jugador/a', Icon: User   },
+  { value: 'goalkeeper', label: 'Portero/a', Icon: Shield },
 ]
 
 export default function Squad({ onBack }) {
@@ -85,7 +85,7 @@ export default function Squad({ onBack }) {
           />
           <input
             style={{ flex: 1, background: s.card, border: `1px solid ${s.border}`, color: s.text, borderRadius: 12, padding: '12px 16px', fontSize: 16, outline: 'none' }}
-            placeholder="Nombre de la jugadora"
+            placeholder="Nombre del jugador/a"
             value={newName}
             onChange={e => setNewName(e.target.value)}
           />
@@ -93,14 +93,14 @@ export default function Squad({ onBack }) {
         <button
           type="submit"
           style={{ width: '100%', background: '#1a56db', color: 'white', border: 'none', borderRadius: 12, padding: 16, fontSize: 17, fontWeight: 700, cursor: 'pointer', display: 'block' }}
-        >+ Añadir {newRole === 'goalkeeper' ? 'portera' : 'jugadora'}</button>
+        >+ Añadir {newRole === 'goalkeeper' ? 'portero/a' : 'jugador/a'}</button>
       </form>
 
       <div style={{ padding: '0 16px 32px' }}>
         {squad.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <Users size={40} color="#374151" style={{ margin: '0 auto 12px' }} />
-            <p style={{ color: '#4b5563', fontSize: 14 }}>Añade las jugadoras de tu equipo</p>
+            <p style={{ color: '#4b5563', fontSize: 14 }}>Añade los jugadores de tu equipo</p>
           </div>
         ) : (
           <>
@@ -133,7 +133,7 @@ export default function Squad({ onBack }) {
                         <span style={{ color: s.accent, fontWeight: 700, width: 32 }}>#{p.number}</span>
                         <div>
                           <div style={{ fontSize: 15 }}>{p.name}</div>
-                          <div style={{ fontSize: 12, color: s.muted, display: 'flex', alignItems: 'center', gap: 4 }}>{p.role === 'goalkeeper' ? <><Shield size={11} /> Portera</> : <><User size={11} /> Jugadora</>}</div>
+                          <div style={{ fontSize: 12, color: s.muted, display: 'flex', alignItems: 'center', gap: 4 }}>{p.role === 'goalkeeper' ? <><Shield size={11} /> Portero/a</> : <><User size={11} /> Jugador/a</>}</div>
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 16 }}>

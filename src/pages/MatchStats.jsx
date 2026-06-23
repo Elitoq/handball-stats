@@ -122,12 +122,12 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           if (!mvp) return null
           const rc = ratingColor(mvp.rating)
           return (
-            <Section title="Jugadora del partido">
+            <Section title="Jugador del partido">
               <div style={{ background: 'linear-gradient(135deg,#0a1628,#0d2456)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                 <Award size={36} color="#7eb3ff" strokeWidth={1.5} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 17 }}>#{mvp.number} {mvp.name}</div>
-                  <div style={{ color: '#7eb3ff', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>{mvp.role === 'goalkeeper' ? <><Shield size={11} /> Portera</> : <><User size={11} /> Jugadora</>}</div>
+                  <div style={{ color: '#7eb3ff', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>{mvp.role === 'goalkeeper' ? <><Shield size={11} /> Portero/a</> : <><User size={11} /> Jugador/a</>}</div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ color: rc, fontWeight: 900, fontSize: 32, lineHeight: 1 }}>{mvp.rating.toFixed(1)}</div>
@@ -140,7 +140,7 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
 
         {/* Lista de jugadoras */}
         {playersWithStats.length > 0 && (
-          <Section title="Jugadoras — toca para ver detalle">
+          <Section title="Jugadores — toca para ver detalle">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {playersWithStats.map(p => (
                 <PlayerRow key={p.id} player={p} onSelect={() => onSelectPlayer(p.id)} />
@@ -187,7 +187,7 @@ function PlayerDetail({ match, player, stats, onBack }) {
             <span style={{ color: '#7eb3ff', fontWeight: 700, fontSize: 20 }}>#{player?.number}</span>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{player?.name}</div>
-              <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? <><Shield size={12} style={{display:'inline',marginRight:3}} />Portera</> : <><User size={12} style={{display:'inline',marginRight:3}} />Jugadora</>}</div>
+              <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? <><Shield size={12} style={{display:'inline',marginRight:3}} />Portero/a</> : <><User size={12} style={{display:'inline',marginRight:3}} />Jugador/a</>}</div>
             </div>
           </div>
           {showRatings && (() => {
@@ -347,7 +347,7 @@ function PlayerRow({ player, onSelect }) {
           <span style={{ color: '#7eb3ff', fontWeight: 700, fontSize: 16, minWidth: 36 }}>#{player.number}</span>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15 }}>{player.name}</div>
-            <div style={{ color: '#6b7280', fontSize: 12 }}>{isGK ? <><Shield size={11} style={{display:'inline',marginRight:3}} />Portera</> : <><User size={11} style={{display:'inline',marginRight:3}} />Jugadora</>}</div>
+            <div style={{ color: '#6b7280', fontSize: 12 }}>{isGK ? <><Shield size={11} style={{display:'inline',marginRight:3}} />Portero/a</> : <><User size={11} style={{display:'inline',marginRight:3}} />Jugador/a</>}</div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>

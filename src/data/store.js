@@ -2,7 +2,7 @@ import { db } from '../firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 const STORAGE_KEY = 'handball_data'
-const defaultData = { squad: [], matches: [], settings: { showRatings: true } }
+const defaultData = { squad: [], matches: [], settings: { showRatings: true, language: 'es' } }
 
 let _uid = null
 export function setFirebaseUser(uid) { _uid = uid }
@@ -16,7 +16,7 @@ export function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultData
     const parsed = JSON.parse(raw)
-    return { ...defaultData, ...parsed, squad: parsed.squad ?? [], settings: { showRatings: true, ...parsed.settings } }
+    return { ...defaultData, ...parsed, squad: parsed.squad ?? [], settings: { showRatings: true, language: 'es', ...parsed.settings } }
   } catch {
     return defaultData
   }
@@ -63,7 +63,7 @@ export const SHOT_TYPES = ['Posicional', '9 metros', 'Contraataque', '7 metros',
 export const MISS_REASONS = ['Fuera', 'Parada rival', 'Bloqueado', 'Al palo']
 export const EXCLUSION_TYPES = ['2 minutos', 'Tarjeta roja', 'Tarjeta azul']
 export const TURNOVER_TYPES = ['Pérdida técnica', 'Interceptada', 'Pasos', 'Dobles', 'Pasivo']
-export const ROLES = { player: 'Jugadora', goalkeeper: 'Portera' }
+export const ROLES = { player: 'Jugador/a', goalkeeper: 'Portero/a' }
 
 // ── Rating algorithm ─────────────────────────────────────────────
 // Benchmarks from EHF Champions League / Bundesliga data

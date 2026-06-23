@@ -1,4 +1,4 @@
-import { getPlayerStats, calcPlayerRating, ratingLabel, GOAL_ZONES, SHOT_TYPES } from '../data/store'
+import { getPlayerStats, calcPlayerRating, ratingLabel, loadData, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 
 // ── Entry points ────────────────────────────────────────────────
 
@@ -111,11 +111,11 @@ function buildMatchReport(match) {
 
     ${playersWithStats.length > 0 ? `
     <div class="section">
-      <h2>Estadísticas por jugadora</h2>
+      <h2>Estadísticas por jugador</h2>
       <table class="player-table">
         <thead>
           <tr>
-            <th>#</th><th>Jugadora</th><th>Rol</th>
+            <th>#</th><th>Jugador</th><th>Rol</th>
             <th class="num green">Goles</th>
             <th class="num orange">Fallos</th>
             <th class="num purple">Eficacia</th>
@@ -124,12 +124,13 @@ function buildMatchReport(match) {
             <th class="num indigo">% Par.</th>
             <th class="num">Excl.</th>
             <th class="num">Pérd.</th>
-            <th class="num">Nota</th>
+            ${loadData().settings?.showRatings ?? true ? '<th class="num">Nota</th>' : ''}
           </tr>
         </thead>
         <tbody>
           ${playersWithStats.map(p => {
             const s = p.stats
+            const showRatings = loadData().settings?.showRatings ?? true
             const eff = s.goals + s.misses > 0 ? `${Math.round(s.goals/(s.goals+s.misses)*100)}%` : '-'
             const sav = s.saves + s.conceded > 0 ? `${Math.round(s.saves/(s.saves+s.conceded)*100)}%` : '-'
             const rating = calcPlayerRating(s, p.role)
@@ -137,7 +138,7 @@ function buildMatchReport(match) {
             return `<tr>
               <td class="num">${p.number}</td>
               <td>${p.name}</td>
-              <td class="role">${p.role === 'goalkeeper' ? 'Portera' : 'Jugadora'}</td>
+              <td class="role">${p.role === 'goalkeeper' ? 'Portero/a' : 'Jugador/a'}</td>
               <td class="num green">${s.goals}</td>
               <td class="num orange">${s.misses}</td>
               <td class="num purple">${eff}</td>
@@ -146,7 +147,7 @@ function buildMatchReport(match) {
               <td class="num indigo">${sav}</td>
               <td class="num">${s.exclusions}</td>
               <td class="num">${s.turnovers}</td>
-              <td class="num">${rCell}</td>
+              ${showRatings ? `<td class="num">${rCell}</td>` : ''}
             </tr>`
           }).join('')}
         </tbody>
@@ -178,7 +179,7 @@ function buildMatchReport(match) {
 // ── Player match report ──────────────────────────────────────────
 
 function buildPlayerMatchReport(match, player, stats) {
-  if (!player) return '<p>Jugadora no encontrada</p>'
+  if (!player) return '<p>Jugador/a no encontrado/a</p>'
   const isGK = player.role === 'goalkeeper'
   const eff = isGK
     ? (stats.saves + stats.conceded > 0 ? Math.round(stats.saves/(stats.saves+stats.conceded)*100) : null)
@@ -193,7 +194,7 @@ function buildPlayerMatchReport(match, player, stats) {
     ${header(
       `#${player.number} ${player.name}`,
       match.date,
-      `${match.teamName} vs ${match.rival} · ${isGK ? 'Portera' : 'Jugadora'}`
+      `${match.teamName} vs ${match.rival} · ${isGK ? 'Portero/a' : 'Jugador/a'}`
     )}
 
     <div class="section">
@@ -216,6 +217,7 @@ function buildPlayerMatchReport(match, player, stats) {
     </div>
 
     ${(() => {
+      if (!(loadData().settings?.showRatings ?? true)) return ''
       const rating = calcPlayerRating(stats, player.role)
       if (rating == null) return ''
       return `<div class="section">
@@ -311,9 +313,9 @@ function buildSeasonReport(matches, squadMap) {
 
     ${scorers.length > 0 ? `
     <div class="section">
-      <h2>Ranking goleadoras</h2>
+      <h2>Ranking goleadores/as</h2>
       <table class="player-table">
-        <thead><tr><th>#</th><th>Jugadora</th><th class="num">Partidos</th><th class="num green">Goles</th><th class="num orange">Fallos</th><th class="num purple">Eficacia</th><th class="num">Excl.</th><th class="num">Pérd.</th></tr></thead>
+        <thead><tr><th>#</th><th>Jugador/a</th><th class="num">Partidos</th><th class="num green">Goles</th><th class="num orange">Fallos</th><th class="num purple">Eficacia</th><th class="num">Excl.</th><th class="num">Pérd.</th></tr></thead>
         <tbody>
           ${scorers.map((p, i) => {
             const s = p.stats
@@ -335,9 +337,9 @@ function buildSeasonReport(matches, squadMap) {
 
     ${goalkeepers.length > 0 ? `
     <div class="section">
-      <h2>Ranking porteras</h2>
+      <h2>Ranking porteros/as</h2>
       <table class="player-table">
-        <thead><tr><th>#</th><th>Portera</th><th class="num">Partidos</th><th class="num blue">Paradas</th><th class="num red">Encajados</th><th class="num indigo">% Paradas</th></tr></thead>
+        <thead><tr><th>#</th><th>Portero/a</th><th class="num">Partidos</th><th class="num blue">Paradas</th><th class="num red">Encajados</th><th class="num indigo">% Paradas</th></tr></thead>
         <tbody>
           ${goalkeepers.map((p, i) => {
             const s = p.stats
@@ -415,7 +417,7 @@ function buildPlayerSeasonReport(player, matches) {
     ${header(
       `#${player.number} ${player.name}`,
       'Informe de temporada',
-      `${isGK ? 'Portera' : 'Jugadora'} · ${matchRows.length} partidos`
+      `${isGK ? 'Portero/a' : 'Jugador/a'} · ${matchRows.length} partidos`
     )}
 
     <div class="section">
@@ -588,6 +590,7 @@ function shotTypeTable(totalEvents, successEvents) {
 }
 
 function mvpBlock(match) {
+  if (!(loadData().settings?.showRatings ?? true)) return ''
   const rated = match.players
     .map(p => ({ ...p, stats: getPlayerStats(match, p.id), rating: null }))
     .map(p => ({ ...p, rating: calcPlayerRating(p.stats, p.role) }))
@@ -599,12 +602,12 @@ function mvpBlock(match) {
   const bg = mvp.rating >= 7.5 ? '#f0fdf4' : mvp.rating >= 6.0 ? '#fff7ed' : '#fef2f2'
   return `
     <div class="section">
-      <h2>Jugadora del partido</h2>
+      <h2>Jugador del partido</h2>
       <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#0a1628,#0d2456);border-radius:12px;padding:16px 20px;color:white">
         <div style="font-size:32px;color:#7eb3ff">★</div>
         <div style="flex:1">
           <div style="font-weight:800;font-size:18px">#${mvp.number} ${mvp.name}</div>
-          <div style="color:#7eb3ff;font-size:12px;margin-top:2px">${mvp.role === 'goalkeeper' ? 'Portera' : 'Jugadora'}</div>
+          <div style="color:#7eb3ff;font-size:12px;margin-top:2px">${mvp.role === 'goalkeeper' ? 'Portero/a' : 'Jugador/a'}</div>
         </div>
         <div style="text-align:center;background:${bg};border-radius:10px;padding:8px 16px">
           <div style="color:${color};font-weight:900;font-size:36px;line-height:1">${mvp.rating.toFixed(1)}</div>

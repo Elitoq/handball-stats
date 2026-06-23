@@ -132,7 +132,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
 
         {/* Ranking goleadoras */}
         {scorers.length > 0 && (
-          <Section title="Ranking goleadoras">
+          <Section title="Ranking goleadores/as">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {scorers.map((p, i) => (
                 <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="scorer"
@@ -144,7 +144,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch }) {
 
         {/* Ranking porteras */}
         {goalkeepers.length > 0 && (
-          <Section title="Ranking porteras">
+          <Section title="Ranking porteros/as">
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {goalkeepers.map((p, i) => (
                 <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="goalkeeper"

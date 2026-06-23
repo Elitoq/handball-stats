@@ -1,21 +1,25 @@
 import { useState } from 'react'
-import { Users, TrendingUp, BarChart2, Activity, Plus, Settings } from 'lucide-react'
+import { Users, TrendingUp, BarChart2, Activity, Plus, Settings, Globe, Star, LogOut, User } from 'lucide-react'
 import { loadData, saveData } from '../data/store'
+import { t } from '../i18n'
 
-export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, onSeason }) {
-  const [data, setData] = useState(loadData)
+export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, onSeason, onLangChange, onLogout, user, guest }) {
+  const [data, setData]           = useState(loadData)
   const [showSettings, setShowSettings] = useState(false)
-  const matches = [...data.matches].sort((a, b) => b.createdAt - a.createdAt)
-  const showRatings = data.settings?.showRatings ?? true
 
-  function toggleRatings() {
-    const updated = { ...data, settings: { ...data.settings, showRatings: !showRatings } }
+  const matches   = [...data.matches].sort((a, b) => b.createdAt - a.createdAt)
+  const showRatings = data.settings?.showRatings ?? true
+  const lang        = data.settings?.language    ?? 'es'
+
+  function updateSettings(patch) {
+    const updated = { ...data, settings: { ...data.settings, ...patch } }
     setData(updated)
     saveData(updated)
+    if (patch.language) onLangChange?.(patch.language)
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col">
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col" style={{ paddingBottom: 72 }}>
       <div className="px-4 pt-12 pb-4 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">Handball Stats</h1>
@@ -66,25 +70,73 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
         )}
       </div>
 
+      {/* ── Settings bottom sheet ── */}
       {showSettings && (
-        <div onClick={() => setShowSettings(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
-          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: '#111827', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', fontFamily: 'system-ui, sans-serif' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-              <span style={{ color: 'white', fontSize: 17, fontWeight: 700 }}>Ajustes</span>
-              <button onClick={() => setShowSettings(false)} style={{ color: '#6b7280', background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>✕</button>
+        <div
+          onClick={() => setShowSettings(false)}
+          style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.75)', zIndex: 200, display: 'flex', alignItems: 'flex-end' }}
+        >
+          <div
+            onClick={e => e.stopPropagation()}
+            style={{ width: '100%', maxWidth: 480, margin: '0 auto', background: '#0d1117', borderRadius: '22px 22px 0 0', paddingBottom: 'calc(24px + env(safe-area-inset-bottom))' }}
+          >
+            {/* Handle */}
+            <div style={{ display: 'flex', justifyContent: 'center', padding: '12px 0 4px' }}>
+              <div style={{ width: 36, height: 4, borderRadius: 99, background: '#374151' }} />
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #1f2937' }}>
-              <div>
-                <div style={{ color: 'white', fontSize: 15, fontWeight: 500 }}>Mostrar notas de jugadoras</div>
-                <div style={{ color: '#6b7280', fontSize: 13, marginTop: 3 }}>Puntuación 1–10 por partido. Desactívalo para categorías base.</div>
+            {/* Title row */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '8px 20px 20px' }}>
+              <span style={{ color: 'white', fontSize: 18, fontWeight: 700 }}>{t('settings.title', lang)}</span>
+              <button onClick={() => setShowSettings(false)} style={{ color: '#6b7280', background: '#1f2937', border: 'none', width: 30, height: 30, borderRadius: '50%', fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>✕</button>
+            </div>
+
+            {/* ── Language ── */}
+            <SettingSection icon={Globe} label={t('settings.language', lang)} desc={t('settings.language.desc', lang)}>
+              <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+                {[['es', 'Español 🇪🇸'], ['en', 'English 🇬🇧']].map(([code, display]) => (
+                  <button
+                    key={code}
+                    onClick={() => updateSettings({ language: code })}
+                    style={{
+                      flex: 1, padding: '10px 0', borderRadius: 12, border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: 14,
+                      background: lang === code ? '#1a56db' : '#1f2937',
+                      color:      lang === code ? 'white'   : '#6b7280',
+                      outline:    lang === code ? '2px solid #3b82f6' : 'none',
+                      outlineOffset: 2,
+                    }}
+                  >{display}</button>
+                ))}
               </div>
-              <button
-                onClick={toggleRatings}
-                style={{ flexShrink: 0, marginLeft: 16, width: 48, height: 28, borderRadius: 999, border: 'none', cursor: 'pointer', background: showRatings ? '#1a56db' : '#374151', position: 'relative', transition: 'background 0.2s' }}
-              >
-                <span style={{ position: 'absolute', top: 3, left: showRatings ? 23 : 3, width: 22, height: 22, background: 'white', borderRadius: '50%', transition: 'left 0.2s' }} />
-              </button>
+            </SettingSection>
+
+            <Divider />
+
+            {/* ── Ratings ── */}
+            <SettingSection icon={Star} label={t('settings.ratings', lang)} desc={t('settings.ratings.desc', lang)}>
+              <Toggle value={showRatings} onChange={v => updateSettings({ showRatings: v })} />
+            </SettingSection>
+
+            <Divider />
+
+            {/* ── Account ── */}
+            <div style={{ padding: '16px 20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 12 }}>
+                <User size={15} color="#6b7280" />
+                <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{t('settings.account', lang)}</span>
+              </div>
+              <div style={{ background: '#1f2937', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ color: 'white', fontSize: 14, fontWeight: 500 }}>{user ? user.email : t('settings.guest', lang)}</div>
+                  {user && <div style={{ color: '#6b7280', fontSize: 12, marginTop: 2 }}>Google</div>}
+                </div>
+                <button
+                  onClick={() => { setShowSettings(false); onLogout?.() }}
+                  style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#1a1f2e', border: '1px solid #374151', color: '#f87171', borderRadius: 10, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  <LogOut size={14} /> {t('settings.logout', lang)}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -92,6 +144,43 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
     </div>
   )
 }
+
+// ── Settings sub-components ──────────────────────────────────────
+
+function SettingSection({ icon: Icon, label, desc, children }) {
+  return (
+    <div style={{ padding: '16px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
+        <Icon size={15} color="#6b7280" />
+        <span style={{ color: '#6b7280', fontSize: 12, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
+      </div>
+      <p style={{ color: '#4b5563', fontSize: 13, marginTop: 0 }}>{desc}</p>
+      {children}
+    </div>
+  )
+}
+
+function Toggle({ value, onChange }) {
+  return (
+    <button
+      onClick={() => onChange(!value)}
+      style={{ display: 'flex', alignItems: 'center', gap: 10, background: 'none', border: 'none', cursor: 'pointer', padding: '4px 0', marginTop: 6 }}
+    >
+      <div style={{ width: 48, height: 28, borderRadius: 999, background: value ? '#1a56db' : '#374151', position: 'relative', transition: 'background 0.2s', flexShrink: 0 }}>
+        <span style={{ position: 'absolute', top: 3, left: value ? 23 : 3, width: 22, height: 22, background: 'white', borderRadius: '50%', transition: 'left 0.2s' }} />
+      </div>
+      <span style={{ color: value ? '#7eb3ff' : '#6b7280', fontSize: 14, fontWeight: 600 }}>
+        {value ? 'Activado' : 'Desactivado'}
+      </span>
+    </button>
+  )
+}
+
+function Divider() {
+  return <div style={{ height: 1, background: '#1f2937', margin: '0 20px' }} />
+}
+
+// ── Match card ──────────────────────────────────────────────────
 
 function MatchCard({ match, onOpen, onStats }) {
   const goals      = match.events.filter(e => e.type === 'goal').length

@@ -30,7 +30,7 @@ export default function ActionModal({ type, players, minute, onConfirm, onClose 
       : sorted.filter(p => p.role !== 'goalkeeper')
     const allPlayers = relevantPlayers.length > 0 ? relevantPlayers : sorted
 
-    const playerQuestion = isGoalkeeper ? '¿Qué portera?' : '¿Quién lanzó?'
+    const playerQuestion = isGoalkeeper ? '¿Qué portero/a?' : '¿Quién lanzó?'
     const confirmLabel = isGoal ? 'Confirmar gol' : isMiss ? 'Confirmar fallo' : isSave ? 'Confirmar parada' : 'Confirmar gol encajado'
     const zoneLabel = isGoalkeeper ? 'Zona del disparo (en portería)' : isMiss ? 'Zona donde apuntó' : 'Zona del gol'
 
@@ -42,7 +42,7 @@ export default function ActionModal({ type, players, minute, onConfirm, onClose 
           <div style={{ padding: '0 16px 16px' }}>
             <p style={{ color: '#9ca3af', fontSize: 14, marginBottom: 12 }}>{playerQuestion}</p>
             {allPlayers.length === 0 ? (
-              <button onClick={() => confirm()} style={btnStyle('#374151', 'white')}>Registrar sin jugadora</button>
+              <button onClick={() => confirm()} style={btnStyle('#374151', 'white')}>Registrar sin jugador/a</button>
             ) : (
               <PlayerGrid players={allPlayers} onSelect={setSelectedPlayer} color={color} />
             )}
@@ -96,7 +96,7 @@ export default function ActionModal({ type, players, minute, onConfirm, onClose 
         <div style={{ padding: '0 16px 16px' }}>
           {!selectedPlayer ? (
             <>
-              <p style={{ color: '#9ca3af', fontSize: 14, marginBottom: 12 }}>¿Quién fue excluida?</p>
+              <p style={{ color: '#9ca3af', fontSize: 14, marginBottom: 12 }}>¿Quién fue excluido/a?</p>
               <PlayerGrid players={sorted} onSelect={setSelectedPlayer} color={color} />
             </>
           ) : (

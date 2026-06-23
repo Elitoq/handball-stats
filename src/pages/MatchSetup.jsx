@@ -83,11 +83,11 @@ export default function MatchSetup({ onStart, onBack }) {
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
       <div className="px-4 pt-12 pb-4">
         <button onClick={() => setStep('info')} className="text-gray-400 text-sm mb-4 block">← Atrás</button>
-        <h1 className="text-2xl font-bold mb-1">Jugadoras convocadas</h1>
+        <h1 className="text-2xl font-bold mb-1">Jugadores convocados</h1>
         <p className="text-gray-500 text-sm">
           {squad.length === 0
-            ? 'No tienes jugadoras en tu plantilla. Puedes añadirlas en "Mi Equipo".'
-            : 'Desmarca las que no jueguen hoy'}
+            ? 'No tienes jugadores en tu plantilla. Puedes añadirlos en "Mi Equipo".'
+            : 'Desmarca los que no jueguen hoy'}
         </p>
       </div>
 
@@ -119,7 +119,7 @@ export default function MatchSetup({ onStart, onBack }) {
       </div>
 
       <div className="p-4">
-        <div className="text-center text-gray-500 text-sm mb-3">{selectedIds.size} jugadoras seleccionadas</div>
+        <div className="text-center text-gray-500 text-sm mb-3">{selectedIds.size} jugadores seleccionados</div>
         <button
           onClick={startMatch}
           className="w-full bg-blue-700 active:bg-blue-800 text-white font-bold py-4 rounded-2xl text-lg"
