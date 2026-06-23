@@ -6,7 +6,7 @@ const COLORS = { goal: '#16a34a', miss: '#ca8a04', save: '#2563eb', conceded: '#
 
 export default function ActionModal({ type, players, minute, onConfirm, onClose }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
-  const [showDetails, setShowDetails] = useState(false)
+  const [showDetails, setShowDetails] = useState(true)
   const [zone, setZone] = useState(null)
   const [shotType, setShotType] = useState(null)
   const [missReason, setMissReason] = useState(null)
