@@ -12,6 +12,7 @@ import SeasonDashboard from './pages/SeasonDashboard'
 
 export default function App() {
   const [user, setUser] = useState(undefined) // undefined = loading, null = logged out
+  const [guest, setGuest] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [screen, setScreen] = useState('home')
   const [activeMatchId, setActiveMatchId] = useState(null)
@@ -36,7 +37,7 @@ export default function App() {
     )
   }
 
-  if (!user) return <Login />
+  if (!user && !guest) return <Login onGuest={() => setGuest(true)} />
 
   let content
   if (screen === 'setup') {

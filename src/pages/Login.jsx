@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { auth } from '../firebase'
 import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
 
-export default function Login() {
+export default function Login({ onGuest }) {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
 
@@ -20,25 +20,40 @@ export default function Login() {
   return (
     <div style={{ minHeight: '100dvh', background: '#030712', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '0 32px', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ marginBottom: 48, textAlign: 'center' }}>
-        <div style={{ fontSize: 48, marginBottom: 16 }}>🤾</div>
+        <div style={{ fontSize: 48, marginBottom: 16, color: '#7eb3ff', fontWeight: 900, letterSpacing: -2 }}>HS</div>
         <h1 style={{ color: 'white', fontSize: 26, fontWeight: 800, margin: 0 }}>Handball Stats</h1>
-        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 8 }}>Tus datos guardados en la nube, accesibles desde cualquier dispositivo</p>
+        <p style={{ color: '#6b7280', fontSize: 14, marginTop: 8 }}>Registra partidos, analiza temporadas, exporta informes</p>
       </div>
 
-      <button
-        onClick={handleGoogle}
-        disabled={loading}
-        style={{ width: '100%', maxWidth: 340, background: 'white', color: '#111827', border: 'none', borderRadius: 14, padding: '14px 20px', fontSize: 16, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, opacity: loading ? 0.7 : 1 }}
-      >
-        <GoogleIcon />
-        {loading ? 'Iniciando sesión...' : 'Continuar con Google'}
-      </button>
+      <div style={{ width: '100%', maxWidth: 340, display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button
+          onClick={handleGoogle}
+          disabled={loading}
+          style={{ width: '100%', background: 'white', color: '#111827', border: 'none', borderRadius: 14, padding: '14px 20px', fontSize: 16, fontWeight: 600, cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 12, opacity: loading ? 0.7 : 1 }}
+        >
+          <GoogleIcon />
+          {loading ? 'Iniciando sesión...' : 'Continuar con Google'}
+        </button>
+
+        <button
+          onClick={onGuest}
+          disabled={loading}
+          style={{ width: '100%', background: 'transparent', color: '#9ca3af', border: '1px solid #1f2937', borderRadius: 14, padding: '14px 20px', fontSize: 15, fontWeight: 500, cursor: 'pointer' }}
+        >
+          Entrar como invitado
+        </button>
+      </div>
 
       {error && <p style={{ color: '#f87171', fontSize: 13, marginTop: 16, textAlign: 'center' }}>{error}</p>}
 
-      <p style={{ color: '#374151', fontSize: 12, marginTop: 48, textAlign: 'center', maxWidth: 280 }}>
-        Solo usamos tu cuenta para identificarte. No accedemos a ningún otro dato de Google.
-      </p>
+      <div style={{ marginTop: 32, maxWidth: 300, textAlign: 'center' }}>
+        <p style={{ color: '#374151', fontSize: 12, margin: 0 }}>
+          Con Google, tus datos se guardan en la nube y están disponibles en cualquier dispositivo.
+        </p>
+        <p style={{ color: '#374151', fontSize: 12, marginTop: 8 }}>
+          Como invitado, los datos se guardan solo en este dispositivo.
+        </p>
+      </div>
     </div>
   )
 }
