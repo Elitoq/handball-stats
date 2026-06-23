@@ -1,9 +1,18 @@
-import { Users, TrendingUp, BarChart2, Activity, Plus } from 'lucide-react'
-import { loadData } from '../data/store'
+import { useState } from 'react'
+import { Users, TrendingUp, BarChart2, Activity, Plus, Settings } from 'lucide-react'
+import { loadData, saveData } from '../data/store'
 
 export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, onSeason }) {
-  const data = loadData()
+  const [data, setData] = useState(loadData)
+  const [showSettings, setShowSettings] = useState(false)
   const matches = [...data.matches].sort((a, b) => b.createdAt - a.createdAt)
+  const showRatings = data.settings?.showRatings ?? true
+
+  function toggleRatings() {
+    const updated = { ...data, settings: { ...data.settings, showRatings: !showRatings } }
+    setData(updated)
+    saveData(updated)
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
@@ -18,6 +27,9 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
           </button>
           <button onClick={onSeason} style={{ background: '#111827', border: '1px solid #1e3a7a', color: '#7eb3ff', borderRadius: 12, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
             <TrendingUp size={14} /> Temporada
+          </button>
+          <button onClick={() => setShowSettings(true)} style={{ background: '#111827', border: '1px solid #374151', color: '#6b7280', borderRadius: 12, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Settings size={14} /> Ajustes
           </button>
         </div>
       </div>
@@ -53,6 +65,30 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
           </div>
         )}
       </div>
+
+      {showSettings && (
+        <div onClick={() => setShowSettings(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', zIndex: 50, display: 'flex', alignItems: 'flex-end' }}>
+          <div onClick={e => e.stopPropagation()} style={{ width: '100%', background: '#111827', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', fontFamily: 'system-ui, sans-serif' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+              <span style={{ color: 'white', fontSize: 17, fontWeight: 700 }}>Ajustes</span>
+              <button onClick={() => setShowSettings(false)} style={{ color: '#6b7280', background: 'none', border: 'none', fontSize: 20, cursor: 'pointer' }}>✕</button>
+            </div>
+
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 0', borderBottom: '1px solid #1f2937' }}>
+              <div>
+                <div style={{ color: 'white', fontSize: 15, fontWeight: 500 }}>Mostrar notas de jugadoras</div>
+                <div style={{ color: '#6b7280', fontSize: 13, marginTop: 3 }}>Puntuación 1–10 por partido. Desactívalo para categorías base.</div>
+              </div>
+              <button
+                onClick={toggleRatings}
+                style={{ flexShrink: 0, marginLeft: 16, width: 48, height: 28, borderRadius: 999, border: 'none', cursor: 'pointer', background: showRatings ? '#1a56db' : '#374151', position: 'relative', transition: 'background 0.2s' }}
+              >
+                <span style={{ position: 'absolute', top: 3, left: showRatings ? 23 : 3, width: 22, height: 22, background: 'white', borderRadius: '50%', transition: 'left 0.2s' }} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

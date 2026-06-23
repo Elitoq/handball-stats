@@ -2,7 +2,7 @@ import { db } from '../firebase'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 
 const STORAGE_KEY = 'handball_data'
-const defaultData = { squad: [], matches: [] }
+const defaultData = { squad: [], matches: [], settings: { showRatings: true } }
 
 let _uid = null
 export function setFirebaseUser(uid) { _uid = uid }
@@ -16,7 +16,7 @@ export function loadData() {
     const raw = localStorage.getItem(STORAGE_KEY)
     if (!raw) return defaultData
     const parsed = JSON.parse(raw)
-    return { ...defaultData, ...parsed, squad: parsed.squad ?? [] }
+    return { ...defaultData, ...parsed, squad: parsed.squad ?? [], settings: { showRatings: true, ...parsed.settings } }
   } catch {
     return defaultData
   }

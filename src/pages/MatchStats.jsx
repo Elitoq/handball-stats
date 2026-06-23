@@ -32,6 +32,7 @@ export default function MatchStats({ matchId, onBack }) {
 
 function TeamOverview({ match, onSelectPlayer, onBack }) {
   const [periodFilter, setPeriodFilter] = useState(0) // 0=todo, 1=1ª, 2=2ª
+  const showRatings = loadData().settings?.showRatings ?? true
 
   const hasPeriods = match.events.some(e => e.period === 2)
 
@@ -112,7 +113,7 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
         )}
 
         {/* Jugadora del partido */}
-        {playersWithStats.length > 0 && (() => {
+        {showRatings && playersWithStats.length > 0 && (() => {
           const rated = playersWithStats
             .map(p => ({ ...p, rating: calcPlayerRating(p.stats, p.role) }))
             .filter(p => p.rating != null)
@@ -172,6 +173,7 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
 
 function PlayerDetail({ match, player, stats, onBack }) {
   const isGoalkeeper = player?.role === 'goalkeeper'
+  const showRatings = loadData().settings?.showRatings ?? true
 
   return (
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
@@ -188,7 +190,7 @@ function PlayerDetail({ match, player, stats, onBack }) {
               <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? <><Shield size={12} style={{display:'inline',marginRight:3}} />Portera</> : <><User size={12} style={{display:'inline',marginRight:3}} />Jugadora</>}</div>
             </div>
           </div>
-          {(() => {
+          {showRatings && (() => {
             const rating = calcPlayerRating(stats, player?.role)
             if (rating == null) return null
             const rc = ratingColor(rating)
@@ -335,7 +337,8 @@ function PctStatCard({ label, success, total, color }) {
 function PlayerRow({ player, onSelect }) {
   const s = player.stats
   const isGK = player.role === 'goalkeeper'
-  const rating = calcPlayerRating(s, player.role)
+  const showRatings = loadData().settings?.showRatings ?? true
+  const rating = showRatings ? calcPlayerRating(s, player.role) : null
   const rColor = ratingColor(rating)
   return (
     <button onClick={onSelect} style={{ width: '100%', background: '#1f2937', border: 'none', borderRadius: 14, padding: '14px 16px', textAlign: 'left', cursor: 'pointer', color: 'white' }}>
