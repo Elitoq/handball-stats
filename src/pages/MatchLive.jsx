@@ -118,17 +118,17 @@ export default function MatchLive({ matchId, onBack, onStats }) {
         </div>
 
         {/* Scoreboard */}
-        <div className="mt-2">
-          <div className="text-gray-500 text-xs text-center mb-3">{match.teamName} vs {match.rival}</div>
-          <div className="flex items-center justify-center gap-6">
-            <div className="text-center">
-              <div className="text-6xl font-bold tabular-nums text-green-400">{goals}</div>
-              <div className="text-gray-600 text-xs mt-1">{match.teamName}</div>
+        <div style={{ marginTop: 8 }}>
+          <div style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 12 }}>{match.teamName} vs {match.rival}</div>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 64, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
+              <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4 }}>{match.teamName}</div>
             </div>
-            <div className="text-3xl text-gray-700 font-light">—</div>
-            <div className="text-center">
-              <div className="text-6xl font-bold tabular-nums text-red-400">{match.rivalGoals ?? 0}</div>
-              <div className="text-gray-600 text-xs mt-1">{match.rival}</div>
+            <div style={{ color: '#374151', fontSize: 32, fontWeight: 300 }}>—</div>
+            <div style={{ textAlign: 'center', flex: 1 }}>
+              <div style={{ fontSize: 64, fontWeight: 800, color: '#f87171', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{match.rivalGoals ?? 0}</div>
+              <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4 }}>{match.rival}</div>
             </div>
           </div>
         </div>

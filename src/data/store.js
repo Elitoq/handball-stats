@@ -197,10 +197,20 @@ export function calcPlayerRating(stats, role) {
     const missedPenalties = (byType['7 metros']?.n ?? 0) - (byType['7 metros']?.s ?? 0)
     const missedPenaltyPenalty = missedPenalties * 0.4
 
+    // 4. Miss quality: penalize unforced errors more than pressured misses
+    // Fuera = worst (uncontrolled), Bloqueado = bad luck, Parada rival = ok, Al palo = least bad
+    const MISS_PENALTY = { 'Fuera': 0.25, 'Bloqueado': 0.10, 'Parada rival': 0.05, 'Al palo': 0.0 }
+    let missQualityPenalty = 0
+    for (const ev of (stats.missEvents ?? [])) {
+      const reason = ev.details?.missReason
+      if (reason) missQualityPenalty += MISS_PENALTY[reason] ?? 0.10
+    }
+
     let r = 6.0
     r += Math.min(goalContrib, 3.0)
     r += Math.max(-1.5, Math.min(2.0, effScore))
     r -= missedPenaltyPenalty
+    r -= Math.min(missQualityPenalty, 1.5)
     r -= Math.min((stats.turnovers ?? 0) * 0.45, 2.5)
     r -= Math.min((stats.exclusions ?? 0) * 0.6, 1.5)
 
