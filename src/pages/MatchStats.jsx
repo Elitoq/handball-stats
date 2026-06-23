@@ -424,8 +424,8 @@ function DistCell({ label, count, total, bg, border }) {
   const pct = total > 0 ? Math.round(count / total * 100) : null
   return (
     <div style={{ background: bg, padding: '12px 6px', textAlign: 'center', borderRight: border ? '1px solid #374151' : 'none' }}>
-      <div style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{count}/{total}</div>
-      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>{pct != null ? `${pct}%` : '-'}</div>
+      <div style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{count > 0 ? count : '-'}</div>
+      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>{pct != null ? `${pct}%` : ''}</div>
       <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 1 }}>{label}</div>
     </div>
   )
