@@ -72,7 +72,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> {t('back', lang)}</button>
-          <button onClick={() => printSeasonReport(matches, playerMap)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
+          <button onClick={() => printSeasonReport(matches, playerMap, lang)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
         </div>
         <h1 style={h1}>{t('season.title', lang)}</h1>
         <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>
@@ -125,7 +125,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {scorers.map((p, i) => (
                 <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="scorer" lang={lang}
-                  onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)))} />
+                  onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)), lang)} />
               ))}
             </div>
           </Section>
@@ -136,7 +136,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {goalkeepers.map((p, i) => (
                 <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="goalkeeper" lang={lang}
-                  onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)))} />
+                  onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)), lang)} />
               ))}
             </div>
           </Section>

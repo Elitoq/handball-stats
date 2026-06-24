@@ -64,7 +64,7 @@ function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> {t('back', lang)}</button>
-          <button onClick={() => printMatchReport(match)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
+          <button onClick={() => printMatchReport(match, lang)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{match.teamName} vs {match.rival}</div>
         <div style={{ color: '#6b7280', fontSize: 13 }}>{match.date}</div>
@@ -177,7 +177,7 @@ function PlayerDetail({ match, player, stats, onBack, lang }) {
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> {t('mstats.team_btn', lang)}</button>
-          <button onClick={() => printPlayerMatchReport(match, player?.id)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
+          <button onClick={() => printPlayerMatchReport(match, player?.id, lang)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>

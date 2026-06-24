@@ -1,26 +1,133 @@
 import { getPlayerStats, calcPlayerRating, ratingLabel, loadData, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 
+// ── Translations ─────────────────────────────────────────────────
+
+const RT = {
+  es: {
+    victory: 'VICTORIA', defeat: 'DERROTA', draw: 'EMPATE',
+    W: 'V', L: 'D', D: 'E',
+    match_summary: 'Resumen del partido',
+    goals: 'Goles', misses: 'Fallos', efficiency: 'Eficacia',
+    saves: 'Paradas', conceded: 'Encajados', save_pct: '% Paradas',
+    exclusions: 'Exclusiones', turnovers: 'Pérdidas',
+    shots: 'Lanzamientos', shots_rec: 'Disparos rec.',
+    player_of_match: 'Jugador del partido',
+    match_notes: 'Notas del partido',
+    period_breakdown: 'Desglose por partes',
+    p1: '1ª Parte', p2: '2ª Parte',
+    goal_map: 'Mapa de lanzamientos del equipo',
+    save_map: 'Mapa de paradas del equipo',
+    players_title: 'Estadísticas por jugador',
+    col_player: 'Jugador', col_role: 'Rol', col_excl: 'Excl.', col_turn: 'Pérd.',
+    col_note: 'Nota', col_matches: 'Partidos',
+    role_gk: 'Portero/a', role_player: 'Jugador/a',
+    timeline_title: 'Timeline del partido',
+    ev_goal: 'Gol', ev_miss: 'Fallo', ev_save: 'Parada',
+    ev_conceded: 'Encajado', ev_excl: 'Exclusión', ev_turn: 'Pérdida',
+    season_report: 'Informe de temporada',
+    matches_label: 'partidos', results: 'Resultados',
+    wins: 'Victorias', draws: 'Empates', losses: 'Derrotas',
+    team_stats: 'Estadísticas de equipo',
+    scorers: 'Ranking goleadores/as',
+    keepers: 'Ranking porteros/as',
+    match_history: 'Historial de partidos',
+    col_date: 'Fecha', col_rival: 'Rival', col_result: 'Resultado',
+    off_stats: 'Estadísticas ofensivas',
+    gk_stats: 'Estadísticas bajo palos',
+    match_rating: 'Valoración del partido',
+    zone_eff: 'Mapa de eficacia por zona',
+    shot_type: 'Tipo de lanzamiento',
+    shot_recv: 'Tipo de disparo recibido',
+    per_match: 'Partido a partido',
+    season_summary: 'Resumen de temporada',
+    zone_season: 'Mapa de eficacia por zona (acumulado temporada)',
+    shot_season_field: 'Tipo de lanzamiento — temporada',
+    shot_season_gk: 'Tipo de disparo recibido — temporada',
+    net: 'Portería',
+    no_type: 'Sin tipo registrado',
+    hits: 'Éxitos',
+    generated: 'Generado el',
+    goal_label: (g, t) => `${g} Goles de ${t} lanzamientos`,
+    save_label: (s, t) => `${s} Paradas de ${t} disparos`,
+  },
+  en: {
+    victory: 'WIN', defeat: 'LOSS', draw: 'DRAW',
+    W: 'W', L: 'L', D: 'D',
+    match_summary: 'Match summary',
+    goals: 'Goals', misses: 'Misses', efficiency: 'Efficiency',
+    saves: 'Saves', conceded: 'Conceded', save_pct: 'Save %',
+    exclusions: 'Exclusions', turnovers: 'Turnovers',
+    shots: 'Shots', shots_rec: 'Shots received',
+    player_of_match: 'Player of the match',
+    match_notes: 'Match notes',
+    period_breakdown: 'Half-time breakdown',
+    p1: '1st Half', p2: '2nd Half',
+    goal_map: 'Team shot map',
+    save_map: 'Team save map',
+    players_title: 'Player statistics',
+    col_player: 'Player', col_role: 'Role', col_excl: 'Excl.', col_turn: 'Turn.',
+    col_note: 'Rating', col_matches: 'Matches',
+    role_gk: 'Goalkeeper', role_player: 'Player',
+    timeline_title: 'Match timeline',
+    ev_goal: 'Goal', ev_miss: 'Miss', ev_save: 'Save',
+    ev_conceded: 'Conceded', ev_excl: 'Exclusion', ev_turn: 'Turnover',
+    season_report: 'Season report',
+    matches_label: 'matches', results: 'Results',
+    wins: 'Wins', draws: 'Draws', losses: 'Losses',
+    team_stats: 'Team statistics',
+    scorers: 'Top scorers',
+    keepers: 'Top goalkeepers',
+    match_history: 'Match history',
+    col_date: 'Date', col_rival: 'Opponent', col_result: 'Result',
+    off_stats: 'Offensive statistics',
+    gk_stats: 'Goalkeeper statistics',
+    match_rating: 'Match rating',
+    zone_eff: 'Zone efficiency map',
+    shot_type: 'Shot type',
+    shot_recv: 'Received shot type',
+    per_match: 'Match by match',
+    season_summary: 'Season summary',
+    zone_season: 'Zone efficiency map (season total)',
+    shot_season_field: 'Shot type — season',
+    shot_season_gk: 'Received shot type — season',
+    net: 'Goal',
+    no_type: 'No type recorded',
+    hits: 'Hits',
+    generated: 'Generated on',
+    goal_label: (g, t) => `${g} goals from ${t} shots`,
+    save_label: (s, t) => `${s} saves from ${t} shots`,
+  },
+}
+
+function tr(lang) { return RT[lang] ?? RT.es }
+
+// Shot type display translations for the PDF
+const SHOT_LABELS = {
+  es: { 'Posicional': 'Posicional', '9 metros': '9 metros', 'Contraataque': 'Contraataque', '7 metros': '7 metros', 'Extremo': 'Extremo', 'Pivote': 'Pivote' },
+  en: { 'Posicional': 'Positional', '9 metros': '9m shot', 'Contraataque': 'Fast break', '7 metros': 'Penalty (7m)', 'Extremo': 'Wing', 'Pivote': 'Pivot' },
+}
+
 // ── Entry points ────────────────────────────────────────────────
 
-export function printMatchReport(match) {
-  const html = buildMatchReport(match)
+export function printMatchReport(match, lang = 'es') {
+  const html = buildMatchReport(match, lang)
   openPrint(html)
 }
 
-export function printPlayerMatchReport(match, playerId) {
+export function printPlayerMatchReport(match, playerId, lang = 'es') {
   const player = match.players.find(p => p.id === playerId)
   const stats = getPlayerStats(match, playerId)
-  const html = buildPlayerMatchReport(match, player, stats)
+  const html = buildPlayerMatchReport(match, player, stats, lang)
   openPrint(html)
 }
 
-export function printSeasonReport(matches, squadMap) {
-  const html = buildSeasonReport(matches, squadMap)
+export function printSeasonReport(matches, squadMap, lang = 'es') {
+  const html = buildSeasonReport(matches, squadMap, lang)
   openPrint(html)
 }
 
-export function printPlayerSeasonReport(player, matches) {
-  const html = buildPlayerSeasonReport(player, matches)
+export function printPlayerSeasonReport(player, matches, lang = 'es') {
+  const html = buildPlayerSeasonReport(player, matches, lang)
   openPrint(html)
 }
 
@@ -31,7 +138,7 @@ function openPrint(bodyHtml) {
   win.document.write(`<!DOCTYPE html><html><head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width,initial-scale=1">
-    <title>Informe</title>
+    <title>Report</title>
     <style>${printCSS()}</style>
   </head><body>${bodyHtml}</body></html>`)
   win.document.close()
@@ -40,7 +147,8 @@ function openPrint(bodyHtml) {
 
 // ── Match report ────────────────────────────────────────────────
 
-function buildMatchReport(match) {
+function buildMatchReport(match, lang) {
+  const T = tr(lang)
   const goals = match.events.filter(e => e.type === 'goal')
   const misses = match.events.filter(e => e.type === 'miss')
   const saves = match.events.filter(e => e.type === 'save')
@@ -63,68 +171,68 @@ function buildMatchReport(match) {
   const ourGoals = goals.length
   const rivalGoals = match.rivalGoals ?? '?'
   const result = match.rivalGoals != null
-    ? ourGoals > match.rivalGoals ? 'VICTORIA' : ourGoals < match.rivalGoals ? 'DERROTA' : 'EMPATE'
+    ? ourGoals > match.rivalGoals ? T.victory : ourGoals < match.rivalGoals ? T.defeat : T.draw
     : null
 
   return `
     ${header(`${match.teamName} vs ${match.rival}`, match.date, result ? `${result} · ${ourGoals}-${rivalGoals}` : `${ourGoals}-${rivalGoals}`)}
 
     <div class="section">
-      <h2>Resumen del partido</h2>
+      <h2>${T.match_summary}</h2>
       <div class="stats-grid-3">
-        ${statBox('Goles', goals.length, 'green')}
-        ${statBox('Fallos', misses.length, 'orange')}
-        ${statBox(shootingPct != null ? `Eficacia ${shootingPct}%` : 'Lanzamientos', goals.length + misses.length, 'purple')}
+        ${statBox(T.goals, goals.length, 'green')}
+        ${statBox(T.misses, misses.length, 'orange')}
+        ${statBox(shootingPct != null ? `${T.efficiency} ${shootingPct}%` : T.shots, goals.length + misses.length, 'purple')}
       </div>
       <div class="stats-grid-3" style="margin-top:8px">
-        ${statBox('Paradas', saves.length, 'blue')}
-        ${statBox('Encajados', conceded.length, 'red')}
-        ${statBox(savePct != null ? `% Paradas ${savePct}%` : 'Disparos rec.', saves.length + conceded.length, 'indigo')}
+        ${statBox(T.saves, saves.length, 'blue')}
+        ${statBox(T.conceded, conceded.length, 'red')}
+        ${statBox(savePct != null ? `${T.save_pct} ${savePct}%` : T.shots_rec, saves.length + conceded.length, 'indigo')}
       </div>
       <div class="stats-grid-2" style="margin-top:8px">
-        ${statBox('Exclusiones', exclusions.length, 'red')}
-        ${statBox('Pérdidas', turnovers.length, 'orange')}
+        ${statBox(T.exclusions, exclusions.length, 'red')}
+        ${statBox(T.turnovers, turnovers.length, 'orange')}
       </div>
     </div>
 
-    ${mvpBlock(match)}
+    ${mvpBlock(match, T)}
 
     ${match.notes ? `
     <div class="section">
-      <h2>Notas del partido</h2>
+      <h2>${T.match_notes}</h2>
       <div style="background:#f9fafb;border-radius:8px;padding:14px 16px;font-size:13px;color:#374151;line-height:1.6;border:1px solid #e5e7eb;white-space:pre-wrap">${match.notes}</div>
     </div>` : ''}
 
-    ${periodBreakdown(match)}
+    ${periodBreakdown(match, T)}
 
     ${goals.length + misses.length > 0 ? `
     <div class="section">
-      <h2>Mapa de lanzamientos del equipo</h2>
-      ${zoneMap([...goals, ...misses], goals, 'Lanzamientos', 'Goles')}
+      <h2>${T.goal_map}</h2>
+      ${zoneMap([...goals, ...misses], goals, T.shots, T.goals, T.net)}
     </div>` : ''}
 
     ${saves.length + conceded.length > 0 ? `
     <div class="section">
-      <h2>Mapa de paradas del equipo</h2>
-      ${zoneMap([...saves, ...conceded], saves, 'Disparos recibidos', 'Paradas')}
+      <h2>${T.save_map}</h2>
+      ${zoneMap([...saves, ...conceded], saves, T.shots_rec, T.saves, T.net)}
     </div>` : ''}
 
     ${playersWithStats.length > 0 ? `
     <div class="section">
-      <h2>Estadísticas por jugador</h2>
+      <h2>${T.players_title}</h2>
       <table class="player-table">
         <thead>
           <tr>
-            <th>#</th><th>Jugador</th><th>Rol</th>
-            <th class="num green">Goles</th>
-            <th class="num orange">Fallos</th>
-            <th class="num purple">Eficacia</th>
-            <th class="num blue">Paradas</th>
-            <th class="num red">Encajados</th>
-            <th class="num indigo">% Par.</th>
-            <th class="num">Excl.</th>
-            <th class="num">Pérd.</th>
-            ${loadData().settings?.showRatings ?? true ? '<th class="num">Nota</th>' : ''}
+            <th>#</th><th>${T.col_player}</th><th>${T.col_role}</th>
+            <th class="num green">${T.goals}</th>
+            <th class="num orange">${T.misses}</th>
+            <th class="num purple">${T.efficiency}</th>
+            <th class="num blue">${T.saves}</th>
+            <th class="num red">${T.conceded}</th>
+            <th class="num indigo">${T.save_pct}</th>
+            <th class="num">${T.col_excl}</th>
+            <th class="num">${T.col_turn}</th>
+            ${loadData().settings?.showRatings ?? true ? `<th class="num">${T.col_note}</th>` : ''}
           </tr>
         </thead>
         <tbody>
@@ -138,7 +246,7 @@ function buildMatchReport(match) {
             return `<tr>
               <td class="num">${p.number}</td>
               <td>${p.name}</td>
-              <td class="role">${p.role === 'goalkeeper' ? 'Portero/a' : 'Jugador/a'}</td>
+              <td class="role">${p.role === 'goalkeeper' ? T.role_gk : T.role_player}</td>
               <td class="num green">${s.goals}</td>
               <td class="num orange">${s.misses}</td>
               <td class="num purple">${eff}</td>
@@ -156,11 +264,11 @@ function buildMatchReport(match) {
 
     ${match.events.length > 0 ? `
     <div class="section">
-      <h2>Timeline del partido</h2>
+      <h2>${T.timeline_title}</h2>
       <div class="timeline">
         ${[...match.events].sort((a,b) => a.minute - b.minute).map(ev => {
           const player = match.players.find(p => p.id === ev.playerId)
-          const labels = { goal:'Gol', miss:'Fallo', save:'Parada', conceded:'Encajado', exclusion:'Exclusión', turnover:'Pérdida' }
+          const labels = { goal: T.ev_goal, miss: T.ev_miss, save: T.ev_save, conceded: T.ev_conceded, exclusion: T.ev_excl, turnover: T.ev_turn }
           const dotColors = { goal:'#16a34a', miss:'#ca8a04', save:'#2563eb', conceded:'#dc2626', exclusion:'#dc2626', turnover:'#f97316' }
           return `<div class="timeline-row ${ev.type}">
             <span class="min">${ev.minute}'</span>
@@ -172,14 +280,15 @@ function buildMatchReport(match) {
       </div>
     </div>` : ''}
 
-    ${footer()}
+    ${footer(T, lang)}
   `
 }
 
 // ── Player match report ──────────────────────────────────────────
 
-function buildPlayerMatchReport(match, player, stats) {
-  if (!player) return '<p>Jugador/a no encontrado/a</p>'
+function buildPlayerMatchReport(match, player, stats, lang) {
+  const T = tr(lang)
+  if (!player) return `<p>${T.role_player} not found</p>`
   const isGK = player.role === 'goalkeeper'
   const eff = isGK
     ? (stats.saves + stats.conceded > 0 ? Math.round(stats.saves/(stats.saves+stats.conceded)*100) : null)
@@ -194,25 +303,25 @@ function buildPlayerMatchReport(match, player, stats) {
     ${header(
       `#${player.number} ${player.name}`,
       match.date,
-      `${match.teamName} vs ${match.rival} · ${isGK ? 'Portero/a' : 'Jugador/a'}`
+      `${match.teamName} vs ${match.rival} · ${isGK ? T.role_gk : T.role_player}`
     )}
 
     <div class="section">
-      <h2>${isGK ? 'Estadísticas bajo palos' : 'Estadísticas ofensivas'}</h2>
+      <h2>${isGK ? T.gk_stats : T.off_stats}</h2>
       ${isGK ? `
         <div class="stats-grid-3">
-          ${statBox('Paradas', stats.saves, 'blue')}
-          ${statBox('Encajados', stats.conceded, 'red')}
-          ${statBox(eff != null ? `% Paradas ${eff}%` : 'Disparos', stats.saves + stats.conceded, 'indigo')}
+          ${statBox(T.saves, stats.saves, 'blue')}
+          ${statBox(T.conceded, stats.conceded, 'red')}
+          ${statBox(eff != null ? `${T.save_pct} ${eff}%` : T.shots_rec, stats.saves + stats.conceded, 'indigo')}
         </div>` : `
         <div class="stats-grid-3">
-          ${statBox('Goles', stats.goals, 'green')}
-          ${statBox('Fallos', stats.misses, 'orange')}
-          ${statBox(eff != null ? `Eficacia ${eff}%` : 'Lanzamientos', stats.goals + stats.misses, 'purple')}
+          ${statBox(T.goals, stats.goals, 'green')}
+          ${statBox(T.misses, stats.misses, 'orange')}
+          ${statBox(eff != null ? `${T.efficiency} ${eff}%` : T.shots, stats.goals + stats.misses, 'purple')}
         </div>`}
       <div class="stats-grid-2" style="margin-top:8px">
-        ${statBox('Exclusiones', stats.exclusions, 'red')}
-        ${statBox('Pérdidas', stats.turnovers, 'orange')}
+        ${statBox(T.exclusions, stats.exclusions, 'red')}
+        ${statBox(T.turnovers, stats.turnovers, 'orange')}
       </div>
     </div>
 
@@ -221,7 +330,7 @@ function buildPlayerMatchReport(match, player, stats) {
       const rating = calcPlayerRating(stats, player.role)
       if (rating == null) return ''
       return `<div class="section">
-        <h2>Valoración del partido</h2>
+        <h2>${T.match_rating}</h2>
         <div class="rating-block">
           <div class="rating-number" style="color:${rating >= 7.5 ? '#15803d' : rating >= 6.0 ? '#b45309' : '#dc2626'}">${rating.toFixed(1)}</div>
           <div class="rating-label">${ratingLabel(rating)}</div>
@@ -231,24 +340,25 @@ function buildPlayerMatchReport(match, player, stats) {
 
     ${totalEvents.length > 0 ? `
     <div class="section">
-      <h2>${isGK ? 'Mapa de eficacia por zona (paradas)' : 'Mapa de eficacia por zona (lanzamientos)'}</h2>
-      ${zoneMap(totalEvents, successEvents, isGK ? 'Disparos' : 'Lanzamientos', isGK ? 'Paradas' : 'Goles')}
+      <h2>${T.zone_eff}</h2>
+      ${zoneMap(totalEvents, successEvents, isGK ? T.shots_rec : T.shots, isGK ? T.saves : T.goals, T.net)}
     </div>` : ''}
 
     ${totalEvents.length > 0 ? `
     <div class="section">
-      <h2>Tipo de ${isGK ? 'disparo recibido' : 'lanzamiento'}</h2>
-      ${shotTypeTable(totalEvents, successEvents)}
+      <h2>${isGK ? T.shot_recv : T.shot_type}</h2>
+      ${shotTypeTable(totalEvents, successEvents, T, lang)}
     </div>` : ''}
 
-    ${footer()}
+    ${footer(T, lang)}
   `
 }
 
 // ── Season report ────────────────────────────────────────────────
 
-function buildSeasonReport(matches, squadMap) {
-  if (matches.length === 0) return '<p>Sin partidos registrados.</p>'
+function buildSeasonReport(matches, squadMap, lang) {
+  const T = tr(lang)
+  if (matches.length === 0) return `<p>${lang === 'en' ? 'No matches recorded.' : 'Sin partidos registrados.'}</p>`
   const teamName = matches[0]?.teamName ?? 'Mi equipo'
 
   const allEvents = matches.flatMap(m => m.events)
@@ -264,14 +374,13 @@ function buildSeasonReport(matches, squadMap) {
   const results = matches.map(m => {
     const our = m.events.filter(e => e.type === 'goal').length
     const rival = m.rivalGoals ?? null
-    const result = rival === null ? null : our > rival ? 'V' : our < rival ? 'D' : 'E'
+    const result = rival === null ? null : our > rival ? 'W' : our < rival ? 'L' : 'D'
     return { ...m, ourGoals: our, result }
   })
-  const wins = results.filter(m => m.result === 'V').length
-  const draws = results.filter(m => m.result === 'E').length
-  const losses = results.filter(m => m.result === 'D').length
+  const wins  = results.filter(m => m.result === 'W').length
+  const draws = results.filter(m => m.result === 'D').length
+  const losses = results.filter(m => m.result === 'L').length
 
-  // Acumular por jugadora
   const players = Object.values(squadMap ?? {})
   const scorers = players
     .filter(p => p.role !== 'goalkeeper' && p.stats.goals + p.stats.misses > 0)
@@ -281,14 +390,14 @@ function buildSeasonReport(matches, squadMap) {
     .sort((a, b) => (b.stats.savePct ?? 0) - (a.stats.savePct ?? 0))
 
   return `
-    ${header(teamName, 'Informe de temporada', `${matches.length} partidos · ${wins}V ${draws}E ${losses}D`)}
+    ${header(teamName, T.season_report, `${matches.length} ${T.matches_label} · ${wins}${T.W} ${draws}${T.D} ${losses}${T.L}`)}
 
     <div class="section">
-      <h2>Resultados</h2>
+      <h2>${T.results}</h2>
       <div class="stats-grid-3">
-        ${statBox('Victorias', wins, 'green')}
-        ${statBox('Empates', draws, 'orange')}
-        ${statBox('Derrotas', losses, 'red')}
+        ${statBox(T.wins, wins, 'green')}
+        ${statBox(T.draws, draws, 'orange')}
+        ${statBox(T.losses, losses, 'red')}
       </div>
       <div class="result-bar">
         ${wins > 0 ? `<div class="rb-win" style="flex:${wins}"></div>` : ''}
@@ -298,24 +407,24 @@ function buildSeasonReport(matches, squadMap) {
     </div>
 
     <div class="section">
-      <h2>Estadísticas de equipo</h2>
+      <h2>${T.team_stats}</h2>
       <div class="stats-grid-3">
-        ${statBox('Goles', goals, 'green')}
-        ${statBox('Fallos', misses, 'orange')}
-        ${statBox(shootingPct != null ? `Eficacia ${shootingPct}%` : 'Lanz.', goals + misses, 'purple')}
+        ${statBox(T.goals, goals, 'green')}
+        ${statBox(T.misses, misses, 'orange')}
+        ${statBox(shootingPct != null ? `${T.efficiency} ${shootingPct}%` : T.shots, goals + misses, 'purple')}
       </div>
       <div class="stats-grid-3" style="margin-top:8px">
-        ${statBox('Paradas', saves, 'blue')}
-        ${statBox('Encajados', conceded, 'red')}
-        ${statBox(savePct != null ? `% Paradas ${savePct}%` : 'Dispar.', saves + conceded, 'indigo')}
+        ${statBox(T.saves, saves, 'blue')}
+        ${statBox(T.conceded, conceded, 'red')}
+        ${statBox(savePct != null ? `${T.save_pct} ${savePct}%` : T.shots_rec, saves + conceded, 'indigo')}
       </div>
     </div>
 
     ${scorers.length > 0 ? `
     <div class="section">
-      <h2>Ranking goleadores/as</h2>
+      <h2>${T.scorers}</h2>
       <table class="player-table">
-        <thead><tr><th>#</th><th>Jugador/a</th><th class="num">Partidos</th><th class="num green">Goles</th><th class="num orange">Fallos</th><th class="num purple">Eficacia</th><th class="num">Excl.</th><th class="num">Pérd.</th></tr></thead>
+        <thead><tr><th>#</th><th>${T.col_player}</th><th class="num">${T.col_matches}</th><th class="num green">${T.goals}</th><th class="num orange">${T.misses}</th><th class="num purple">${T.efficiency}</th><th class="num">${T.col_excl}</th><th class="num">${T.col_turn}</th></tr></thead>
         <tbody>
           ${scorers.map((p, i) => {
             const s = p.stats
@@ -337,9 +446,9 @@ function buildSeasonReport(matches, squadMap) {
 
     ${goalkeepers.length > 0 ? `
     <div class="section">
-      <h2>Ranking porteros/as</h2>
+      <h2>${T.keepers}</h2>
       <table class="player-table">
-        <thead><tr><th>#</th><th>Portero/a</th><th class="num">Partidos</th><th class="num blue">Paradas</th><th class="num red">Encajados</th><th class="num indigo">% Paradas</th></tr></thead>
+        <thead><tr><th>#</th><th>${T.role_gk}</th><th class="num">${T.col_matches}</th><th class="num blue">${T.saves}</th><th class="num red">${T.conceded}</th><th class="num indigo">${T.save_pct}</th></tr></thead>
         <tbody>
           ${goalkeepers.map((p, i) => {
             const s = p.stats
@@ -358,36 +467,38 @@ function buildSeasonReport(matches, squadMap) {
     </div>` : ''}
 
     <div class="section">
-      <h2>Historial de partidos</h2>
+      <h2>${T.match_history}</h2>
       <table class="player-table">
-        <thead><tr><th>Fecha</th><th>Rival</th><th class="num">Resultado</th><th class="num green">Goles</th><th class="num blue">Paradas</th><th class="num">Excl.</th><th class="num">Pérd.</th></tr></thead>
+        <thead><tr><th>${T.col_date}</th><th>${T.col_rival}</th><th class="num">${T.col_result}</th><th class="num green">${T.goals}</th><th class="num blue">${T.saves}</th><th class="num">${T.col_excl}</th><th class="num">${T.col_turn}</th></tr></thead>
         <tbody>
           ${[...results].sort((a,b) => new Date(a.date)-new Date(b.date)).map(m => {
-            const saves = m.events.filter(e => e.type === 'save').length
-            const exclusions = m.events.filter(e => e.type === 'exclusion').length
-            const turnovers = m.events.filter(e => e.type === 'turnover').length
-            const resColor = m.result === 'V' ? 'green' : m.result === 'D' ? 'red' : 'orange'
+            const mSaves = m.events.filter(e => e.type === 'save').length
+            const mExcl  = m.events.filter(e => e.type === 'exclusion').length
+            const mTurn  = m.events.filter(e => e.type === 'turnover').length
+            const resLabel = m.result ? T[m.result] : '?'
+            const resColor = m.result === 'W' ? 'green' : m.result === 'L' ? 'red' : 'orange'
             return `<tr>
               <td>${m.date}</td>
               <td>${m.rival}</td>
-              <td class="num ${resColor}">${m.result ?? '?'} ${m.ourGoals}-${m.rivalGoals ?? '?'}</td>
+              <td class="num ${resColor}">${resLabel} ${m.ourGoals}-${m.rivalGoals ?? '?'}</td>
               <td class="num green">${m.ourGoals}</td>
-              <td class="num blue">${saves}</td>
-              <td class="num">${exclusions}</td>
-              <td class="num">${turnovers}</td>
+              <td class="num blue">${mSaves}</td>
+              <td class="num">${mExcl}</td>
+              <td class="num">${mTurn}</td>
             </tr>`
           }).join('')}
         </tbody>
       </table>
     </div>
 
-    ${footer()}
+    ${footer(T, lang)}
   `
 }
 
 // ── Player season report ─────────────────────────────────────────
 
-function buildPlayerSeasonReport(player, matches) {
+function buildPlayerSeasonReport(player, matches, lang) {
+  const T = tr(lang)
   const isGK = player.role === 'goalkeeper'
   let totalGoals = 0, totalMisses = 0, totalSaves = 0, totalConceded = 0, totalExcl = 0, totalTurn = 0
 
@@ -407,7 +518,6 @@ function buildPlayerSeasonReport(player, matches) {
   const savePct = totalSaves + totalConceded > 0
     ? Math.round(totalSaves/(totalSaves+totalConceded)*100) : null
 
-  // Acumular eventos para el mapa
   const allSuccessEvents = matchRows.flatMap(r => isGK ? r.stats.saveEvents : r.stats.goalEvents)
   const allTotalEvents = matchRows.flatMap(r => isGK
     ? [...r.stats.saveEvents, ...r.stats.concededEvents]
@@ -416,52 +526,52 @@ function buildPlayerSeasonReport(player, matches) {
   return `
     ${header(
       `#${player.number} ${player.name}`,
-      'Informe de temporada',
-      `${isGK ? 'Portero/a' : 'Jugador/a'} · ${matchRows.length} partidos`
+      T.season_report,
+      `${isGK ? T.role_gk : T.role_player} · ${matchRows.length} ${T.matches_label}`
     )}
 
     <div class="section">
-      <h2>Resumen de temporada</h2>
+      <h2>${T.season_summary}</h2>
       ${isGK ? `
         <div class="stats-grid-3">
-          ${statBox('Paradas', totalSaves, 'blue')}
-          ${statBox('Encajados', totalConceded, 'red')}
-          ${statBox(savePct != null ? `% Paradas ${savePct}%` : 'Disparos', totalSaves + totalConceded, 'indigo')}
+          ${statBox(T.saves, totalSaves, 'blue')}
+          ${statBox(T.conceded, totalConceded, 'red')}
+          ${statBox(savePct != null ? `${T.save_pct} ${savePct}%` : T.shots_rec, totalSaves + totalConceded, 'indigo')}
         </div>` : `
         <div class="stats-grid-3">
-          ${statBox('Goles', totalGoals, 'green')}
-          ${statBox('Fallos', totalMisses, 'orange')}
-          ${statBox(shootingPct != null ? `Eficacia ${shootingPct}%` : 'Lanz.', totalGoals + totalMisses, 'purple')}
+          ${statBox(T.goals, totalGoals, 'green')}
+          ${statBox(T.misses, totalMisses, 'orange')}
+          ${statBox(shootingPct != null ? `${T.efficiency} ${shootingPct}%` : T.shots, totalGoals + totalMisses, 'purple')}
         </div>`}
       <div class="stats-grid-2" style="margin-top:8px">
-        ${statBox('Exclusiones', totalExcl, 'red')}
-        ${statBox('Pérdidas', totalTurn, 'orange')}
+        ${statBox(T.exclusions, totalExcl, 'red')}
+        ${statBox(T.turnovers, totalTurn, 'orange')}
       </div>
     </div>
 
     ${allTotalEvents.length > 0 ? `
     <div class="section">
-      <h2>Mapa de eficacia por zona (acumulado temporada)</h2>
-      ${zoneMap(allTotalEvents, allSuccessEvents, isGK ? 'Disparos' : 'Lanzamientos', isGK ? 'Paradas' : 'Goles')}
+      <h2>${T.zone_season}</h2>
+      ${zoneMap(allTotalEvents, allSuccessEvents, isGK ? T.shots_rec : T.shots, isGK ? T.saves : T.goals, T.net)}
     </div>` : ''}
 
     ${allTotalEvents.length > 0 ? `
     <div class="section">
-      <h2>Tipo de ${isGK ? 'disparo recibido' : 'lanzamiento'} — temporada</h2>
-      ${shotTypeTable(allTotalEvents, allSuccessEvents)}
+      <h2>${isGK ? T.shot_season_gk : T.shot_season_field}</h2>
+      ${shotTypeTable(allTotalEvents, allSuccessEvents, T, lang)}
     </div>` : ''}
 
     ${matchRows.length > 0 ? `
     <div class="section">
-      <h2>Partido a partido</h2>
+      <h2>${T.per_match}</h2>
       <table class="player-table">
         <thead>
           <tr>
-            <th>Fecha</th><th>Rival</th>
+            <th>${T.col_date}</th><th>${T.col_rival}</th>
             ${isGK
-              ? '<th class="num blue">Paradas</th><th class="num red">Encajados</th><th class="num indigo">%</th>'
-              : '<th class="num green">Goles</th><th class="num orange">Fallos</th><th class="num purple">Efic.</th>'}
-            <th class="num">Excl.</th>
+              ? `<th class="num blue">${T.saves}</th><th class="num red">${T.conceded}</th><th class="num indigo">%</th>`
+              : `<th class="num green">${T.goals}</th><th class="num orange">${T.misses}</th><th class="num purple">${T.efficiency}</th>`}
+            <th class="num">${T.col_excl}</th>
           </tr>
         </thead>
         <tbody>
@@ -482,7 +592,7 @@ function buildPlayerSeasonReport(player, matches) {
       </table>
     </div>` : ''}
 
-    ${footer()}
+    ${footer(T, lang)}
   `
 }
 
@@ -498,18 +608,19 @@ function header(title, subtitle, badge) {
   `
 }
 
-function footer() {
-  const now = new Date().toLocaleDateString('es-ES', { day:'2-digit', month:'long', year:'numeric' })
-  return `<div class="report-footer">Generado el ${now} · Handball Stats App</div>`
+function footer(T, lang) {
+  const locale = lang === 'en' ? 'en-GB' : 'es-ES'
+  const now = new Date().toLocaleDateString(locale, { day:'2-digit', month:'long', year:'numeric' })
+  return `<div class="report-footer">${T.generated} ${now} · Handball Stats App</div>`
 }
 
 function statBox(label, value, color) {
   return `<div class="stat-box ${color}"><div class="stat-value">${value}</div><div class="stat-label">${label}</div></div>`
 }
 
-const ZONE_LABELS_SHORT = ['I↑','C↑','D↑','I↓','C↓','D↓']
+const ZONE_LABELS_SHORT = ['L↑','C↑','R↑','L↓','C↓','R↓']
 
-function zoneMap(totalEvents, successEvents, totalLabel, successLabel) {
+function zoneMap(totalEvents, successEvents, totalLabel, successLabel, netLabel) {
   const successIds = new Set(successEvents.map(e => e.id))
   const zones6 = GOAL_ZONES.slice(0, 6)
 
@@ -542,39 +653,40 @@ function zoneMap(totalEvents, successEvents, totalLabel, successLabel) {
 
   return `
     <div class="zone-map-wrap">
-      <div class="zone-map-label">▲ Portería</div>
+      <div class="zone-map-label">▲ ${netLabel}</div>
       <table class="zone-table">
         <tr>${cells6.slice(0,3).join('')}</tr>
         <tr>${cells6.slice(3,6).join('')}</tr>
       </table>
       <div class="zone-legend">
-        ${[['#15803d','>70%'],['#65a30d','50-70%'],['#d97706','30-50%'],['#dc2626','<30%'],['#f3f4f6','Sin datos']].map(([c,l]) =>
+        ${[['#15803d','>70%'],['#65a30d','50-70%'],['#d97706','30-50%'],['#dc2626','<30%'],['#f3f4f6','-']].map(([c,l]) =>
           `<span><span style="display:inline-block;width:12px;height:12px;background:${c};border-radius:2px;border:1px solid #e5e7eb;vertical-align:middle;margin-right:3px"></span>${l}</span>`
         ).join('')}
       </div>
-      <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:center">${successLabel} / ${totalLabel} por zona</div>
+      <div style="font-size:11px;color:#6b7280;margin-top:4px;text-align:center">${successLabel} / ${totalLabel}</div>
     </div>
   `
 }
 
-function shotTypeTable(totalEvents, successEvents) {
+function shotTypeTable(totalEvents, successEvents, T, lang) {
   const successIds = new Set(successEvents.map(e => e.id))
-  const rows = SHOT_TYPES.map(t => {
-    const total = totalEvents.filter(e => e.details?.shotType === t).length
-    const success = totalEvents.filter(e => e.details?.shotType === t && successIds.has(e.id)).length
+  const shotLabels = SHOT_LABELS[lang] ?? SHOT_LABELS.es
+  const rows = SHOT_TYPES.map(type => {
+    const total = totalEvents.filter(e => e.details?.shotType === type).length
+    const success = totalEvents.filter(e => e.details?.shotType === type && successIds.has(e.id)).length
     if (total === 0) return null
     const pct = Math.round(success / total * 100)
-    return { t, total, success, pct }
+    return { type, label: shotLabels[type] ?? type, total, success, pct }
   }).filter(Boolean)
 
-  if (rows.length === 0) return '<p style="color:#6b7280;font-size:13px">Sin tipo registrado</p>'
+  if (rows.length === 0) return `<p style="color:#6b7280;font-size:13px">${T.no_type}</p>`
 
   const max = Math.max(...rows.map(r => r.total))
   return `<table class="player-table">
-    <thead><tr><th>Tipo</th><th class="num">Total</th><th class="num green">Éxitos</th><th class="num purple">%</th><th style="width:40%">Distribución</th></tr></thead>
+    <thead><tr><th>${T.shot_type}</th><th class="num">Total</th><th class="num green">${T.hits}</th><th class="num purple">%</th><th style="width:40%"></th></tr></thead>
     <tbody>
       ${rows.map(r => `<tr>
-        <td>${r.t}</td>
+        <td>${r.label}</td>
         <td class="num">${r.total}</td>
         <td class="num green">${r.success}</td>
         <td class="num purple">${r.pct}%</td>
@@ -589,7 +701,7 @@ function shotTypeTable(totalEvents, successEvents) {
   </table>`
 }
 
-function mvpBlock(match) {
+function mvpBlock(match, T) {
   if (!(loadData().settings?.showRatings ?? true)) return ''
   const rated = match.players
     .map(p => ({ ...p, stats: getPlayerStats(match, p.id), rating: null }))
@@ -602,12 +714,12 @@ function mvpBlock(match) {
   const bg = mvp.rating >= 7.5 ? '#f0fdf4' : mvp.rating >= 6.0 ? '#fff7ed' : '#fef2f2'
   return `
     <div class="section">
-      <h2>Jugador del partido</h2>
+      <h2>${T.player_of_match}</h2>
       <div style="display:flex;align-items:center;gap:16px;background:linear-gradient(135deg,#0a1628,#0d2456);border-radius:12px;padding:16px 20px;color:white">
         <div style="font-size:32px;color:#7eb3ff">★</div>
         <div style="flex:1">
           <div style="font-weight:800;font-size:18px">#${mvp.number} ${mvp.name}</div>
-          <div style="color:#7eb3ff;font-size:12px;margin-top:2px">${mvp.role === 'goalkeeper' ? 'Portero/a' : 'Jugador/a'}</div>
+          <div style="color:#7eb3ff;font-size:12px;margin-top:2px">${mvp.role === 'goalkeeper' ? T.role_gk : T.role_player}</div>
         </div>
         <div style="text-align:center;background:${bg};border-radius:10px;padding:8px 16px">
           <div style="color:${color};font-weight:900;font-size:36px;line-height:1">${mvp.rating.toFixed(1)}</div>
@@ -618,7 +730,7 @@ function mvpBlock(match) {
   `
 }
 
-function periodBreakdown(match) {
+function periodBreakdown(match, T) {
   const hasSecond = match.events.some(e => e.period === 2)
   if (!hasSecond) return ''
 
@@ -642,18 +754,18 @@ function periodBreakdown(match) {
 
   return `
     <div class="section">
-      <h2>Desglose por partes</h2>
+      <h2>${T.period_breakdown}</h2>
       <table class="player-table">
-        <thead><tr><th></th><th class="num">1ª Parte</th><th class="num">2ª Parte</th></tr></thead>
+        <thead><tr><th></th><th class="num">${T.p1}</th><th class="num">${T.p2}</th></tr></thead>
         <tbody>
-          ${row('Goles', p1.goals, p2.goals, 'green')}
-          ${row('Fallos', p1.misses, p2.misses, 'orange')}
-          ${row('Eficacia', p1.eff, p2.eff, 'purple')}
-          ${row('Paradas', p1.saves, p2.saves, 'blue')}
-          ${row('Encajados', p1.conceded, p2.conceded, 'red')}
-          ${row('% Paradas', p1.sav, p2.sav, 'indigo')}
-          ${row('Exclusiones', p1.excl, p2.excl)}
-          ${row('Pérdidas', p1.turn, p2.turn)}
+          ${row(T.goals, p1.goals, p2.goals, 'green')}
+          ${row(T.misses, p1.misses, p2.misses, 'orange')}
+          ${row(T.efficiency, p1.eff, p2.eff, 'purple')}
+          ${row(T.saves, p1.saves, p2.saves, 'blue')}
+          ${row(T.conceded, p1.conceded, p2.conceded, 'red')}
+          ${row(T.save_pct, p1.sav, p2.sav, 'indigo')}
+          ${row(T.exclusions, p1.excl, p2.excl)}
+          ${row(T.turnovers, p1.turn, p2.turn)}
         </tbody>
       </table>
     </div>
@@ -718,7 +830,6 @@ function printCSS() {
     .zone-map-wrap { max-width: 340px; }
     .zone-map-label { font-size: 11px; color: #6b7280; text-align: center; margin-bottom: 4px; }
     .zone-table { width: 100%; border-collapse: collapse; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
-    .zone-7m { margin-top: 6px; padding: 8px 14px; border-radius: 6px; color: white; font-size: 13px; font-weight: 600; }
     .zone-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 11px; color: #6b7280; }
 
     .timeline { display: flex; flex-direction: column; gap: 2px; }
