@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { User, Shield, Award, FileText, ChevronLeft, Target, ShieldOff, UserMinus, ArrowRightLeft } from 'lucide-react'
+import { User, Shield, Award, FileText, ChevronLeft, Target, ShieldOff, UserMinus, ArrowRightLeft, Sparkles } from 'lucide-react'
 import { loadData, getPlayerStats, calcPlayerRating, ratingLabel, ratingColor, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 import { printMatchReport, printPlayerMatchReport } from '../reports/generateReport'
 import { t, tv } from '../i18n'
@@ -34,6 +34,8 @@ export default function MatchStats({ matchId, onBack, lang = 'es' }) {
 
 function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
   const [periodFilter, setPeriodFilter] = useState(0)
+  const [aiState, setAiState]           = useState('idle') // 'idle' | 'loading' | 'done' | 'error'
+  const [aiSummary, setAiSummary]       = useState('')
   const showRatings = loadData().settings?.showRatings ?? true
 
   const hasPeriods = match.events.some(e => e.period === 2)
@@ -49,6 +51,40 @@ function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
   const conceded = evs.filter(e => e.type === 'conceded')
   const exclusions = evs.filter(e => e.type === 'exclusion')
   const turnovers = evs.filter(e => e.type === 'turnover')
+
+  async function analyzeMatch() {
+    setAiState('loading')
+    const matchData = {
+      rival: match.rival,
+      date: match.date,
+      goals: goals.length,
+      misses: misses.length,
+      efficiency: goals.length + misses.length > 0
+        ? Math.round(goals.length / (goals.length + misses.length) * 100) : 0,
+      saves: saves.length,
+      conceded: conceded.length,
+      savePct: saves.length + conceded.length > 0
+        ? Math.round(saves.length / (saves.length + conceded.length) * 100) : 0,
+      exclusions: exclusions.length,
+      turnovers: turnovers.length,
+      players: match.players.map(p => {
+        const s = getPlayerStats(match, p.id)
+        return { name: p.name, role: p.role, goals: s.goals, saves: s.saves, misses: s.misses, exclusions: s.exclusions }
+      }).filter(p => p.goals + p.saves + p.misses + p.exclusions > 0),
+    }
+    try {
+      const res = await fetch('/api/analyze-match', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ matchData }),
+      })
+      const data = await res.json()
+      if (data.summary) { setAiSummary(data.summary); setAiState('done') }
+      else setAiState('error')
+    } catch {
+      setAiState('error')
+    }
+  }
 
   const filteredMatch = periodFilter === 0 ? match : { ...match, events: evs }
   const playersWithStats = match.players
@@ -137,6 +173,39 @@ function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
             </Section>
           )
         })()}
+
+        <Section title={lang === 'en' ? 'AI Analysis' : 'Análisis IA'}>
+          {aiState === 'idle' && (
+            <button onClick={analyzeMatch}
+              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 12, border: '1px solid #1e3a7a', background: '#0a1628', cursor: 'pointer', color: '#7eb3ff', fontWeight: 600, fontSize: 14 }}>
+              <Sparkles size={16} /> {lang === 'en' ? 'Generate match analysis' : 'Generar análisis del partido'}
+            </button>
+          )}
+          {aiState === 'loading' && (
+            <div style={{ textAlign: 'center', padding: '18px 0', color: '#4b5563', fontSize: 13 }}>
+              {lang === 'en' ? 'Analysing…' : 'Analizando…'}
+            </div>
+          )}
+          {aiState === 'done' && (
+            <div style={{ background: '#0a1628', border: '1px solid #1e3a7a', borderRadius: 12, padding: '16px', color: '#d1d5db', fontSize: 14, lineHeight: 1.7 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, color: '#7eb3ff', fontWeight: 600, fontSize: 13 }}>
+                <Sparkles size={14} /> {lang === 'en' ? 'AI Summary' : 'Resumen IA'}
+              </div>
+              {aiSummary}
+              <button onClick={() => setAiState('idle')} style={{ marginTop: 12, background: 'none', border: 'none', color: '#4b5563', fontSize: 12, cursor: 'pointer', padding: 0 }}>
+                {lang === 'en' ? 'Regenerate' : 'Regenerar'}
+              </button>
+            </div>
+          )}
+          {aiState === 'error' && (
+            <div style={{ textAlign: 'center', padding: '14px', color: '#f87171', fontSize: 13 }}>
+              {lang === 'en' ? 'Error generating analysis.' : 'Error al generar el análisis.'}{' '}
+              <button onClick={() => setAiState('idle')} style={{ background: 'none', border: 'none', color: '#60a5fa', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
+                {lang === 'en' ? 'Retry' : 'Reintentar'}
+              </button>
+            </div>
+          )}
+        </Section>
 
         {playersWithStats.length > 0 && (
           <Section title={t('mstats.players', lang)}>
