@@ -8,7 +8,7 @@ const s = { bg: '#030712', card: '#0d1117', border: '#1f2937', muted: '#6b7280',
 
 export default function Squad({ onBack, lang = 'es' }) {
   const [data, setData]       = useState(loadData)
-  const [viewPlayer, setViewPlayer] = useState(null) // player id for season view
+  const [viewPlayer, setViewPlayer] = useState(null) // player object for season view
   const [newName, setNewName] = useState('')
   const [newNumber, setNewNumber] = useState('')
   const [newRole, setNewRole] = useState('player')
@@ -24,8 +24,7 @@ export default function Squad({ onBack, lang = 'es' }) {
   ]
 
   if (viewPlayer) {
-    const player = data.squad.find(p => p.id === viewPlayer)
-    return <PlayerSeasonView player={player} allMatches={data.matches ?? []} lang={lang} onBack={() => setViewPlayer(null)} />
+    return <PlayerSeasonView player={viewPlayer} allMatches={loadData().matches ?? []} lang={lang} onBack={() => setViewPlayer(null)} />
   }
 
   function addPlayer() {
@@ -115,7 +114,7 @@ export default function Squad({ onBack, lang = 'es' }) {
                     </div>
                   ) : (
                     <div style={{ background: '#0d1117', border: `1px solid ${s.border}`, borderRadius: 14, overflow: 'hidden' }}>
-                      <button onClick={() => setViewPlayer(p.id)}
+                      <button onClick={() => setViewPlayer(p)}
                         style={{ width: '100%', background: 'none', border: 'none', cursor: 'pointer', padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left' }}>
                         <span style={{ color: s.accent, fontWeight: 700, fontSize: 16, width: 36, flexShrink: 0 }}>#{p.number}</span>
                         <div style={{ flex: 1 }}>
