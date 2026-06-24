@@ -1,43 +1,51 @@
 # Handball Stats
 
-A real-time handball match tracking PWA built for coaches and analysts. Record events live during a match, review detailed statistics per player and team, and export professional PDF reports.
+A real-time handball match tracking PWA built for coaches and analysts. Record events live, review per-player and team statistics, and export professional PDF reports — all from a mobile browser with no app install required.
+
+---
 
 ## Features
 
 ### Live Match Tracking
-- Real-time scoreboard with manual control of team and rival score
+- Real-time scoreboard with manual control of both team and rival score
 - Timer with play/pause and manual minute adjustment
 - First/second half toggle (switchable in both directions)
 - One-tap event logging: Goal, Miss, Save, Conceded, Exclusion, Turnover
 - Per-event detail capture: zone, shot type, miss reason, exclusion type, turnover type
-- Undo last event to correct mistakes mid-match
-- Recent event log with individual delete
+- Undo last event and delete any individual event mid-match
 - Match notes
 
 ### Post-Match Analysis
 - Team summary: goals, misses, efficiency %, saves, save %
-- Goal and save heatmap visualised on an actual goal frame (6 zones: top/bottom × left/centre/right)
-- MVP highlight with automatic player rating (1–10)
-- Rating algorithm based on EHF Champions League expected performance baselines
-- Full player breakdown: shooting efficiency by zone and shot type for field players; save % by zone and received shot type for goalkeepers
-- Period-by-period filter (All / 1st / 2nd half)
-- Match timeline and notes
+- Goal and save heatmap visualised on an SVG goal frame (6 zones: top/bottom × left/centre/right)
+- MVP with automatic player rating (1–10) based on EHF Champions League baselines
+- Full per-player breakdown: shooting efficiency by zone and shot type for field players; save % by zone and received shot type for goalkeepers
+- Period-by-period filter (All / 1st half / 2nd half)
+- Match timeline
 
 ### Season Dashboard
-- Aggregated team stats across all recorded matches
-- Win/Draw/Loss record
-- Goals trend chart per match
+- Win/Draw/Loss record with visual result bar
+- Aggregated team shooting and save stats
+- Goals trend chart across all matches
 - Top scorers ranking (goals + efficiency %)
 - Top goalkeeper ranking (save %)
-- Full match history table
+- Full match history — tap any match to open its stats directly
+
+### Player Season View
+- Individual player season summary accessible from both Squad and Season Dashboard
+- Totals: goals, efficiency %, saves, save %, exclusions, turnovers
+- Season-aggregated zone efficiency heatmap (SVG goal frame)
+- Shot type breakdown chart
+- Per-match history with individual stats
+- PDF export for each player
 
 ### Squad Management
-- Add, edit and delete players
+- Add, edit and delete players with number and name
 - Role: field player or goalkeeper
-- Player number and name
+- Tap any player to open their full season stats
 
 ### PDF Export
-- Full match report: summary, heatmaps, player table, MVP, timeline
+- Full match report: team summary, heatmaps, player table, MVP, timeline
 - Individual player match report: zone efficiency map, shot type breakdown
 - Season report: rankings, trend data, full match history
 - Individual player season report
@@ -45,9 +53,12 @@ A real-time handball match tracking PWA built for coaches and analysts. Record e
 ### Additional
 - Google authentication + Firestore cloud sync
 - Guest mode (local storage only)
-- ES / EN language support
+- Editable profile name on home screen
+- ES / EN language toggle
 - Player ratings toggle (useful for youth teams)
 - PWA — installable on iOS and Android
+
+---
 
 ## Tech Stack
 
@@ -55,20 +66,24 @@ A real-time handball match tracking PWA built for coaches and analysts. Record e
 |---|---|
 | Framework | React 19 + Vite |
 | Styling | Tailwind CSS v4 + inline styles |
-| Auth & DB | Firebase Authentication + Firestore |
+| Auth & sync | Firebase Authentication + Firestore |
 | Icons | Lucide React |
 | Deployment | Vercel |
+
+---
 
 ## Getting Started
 
 ```bash
+git clone https://github.com/Elitoq/handball-stats.git
+cd handball-stats
 npm install
 npm run dev
 ```
 
 ### Firebase Setup
 
-Create a project at [firebase.google.com](https://firebase.google.com), enable Google Auth and Firestore, then add your config to `src/firebase.js`:
+Create a project at [firebase.google.com](https://firebase.google.com), enable **Google Authentication** and **Firestore**, then add your config to `src/firebase.js`:
 
 ```js
 import { initializeApp } from 'firebase/app'
@@ -79,44 +94,61 @@ const app = initializeApp({
   apiKey: '...',
   authDomain: '...',
   projectId: '...',
-  // ...
+  storageBucket: '...',
+  messagingSenderId: '...',
+  appId: '...',
 })
 
 export const auth = getAuth(app)
-export const db = getFirestore(app)
+export const db   = getFirestore(app)
 ```
+
+The app works fully without Firebase in guest mode (data stored in localStorage).
+
+---
 
 ## Project Structure
 
 ```
 src/
 ├── components/
-│   └── ActionModal.jsx       # Event detail capture modal
+│   └── ActionModal.jsx        # Event detail capture modal (zone, shot type, etc.)
 ├── data/
-│   └── store.js              # Data layer, stat calculations, player rating algorithm
+│   └── store.js               # Data layer, stat calculations, player rating algorithm
 ├── pages/
-│   ├── Home.jsx              # Match list and navigation
-│   ├── Login.jsx             # Google auth / guest entry
-│   ├── MatchLive.jsx         # Live match tracking
-│   ├── MatchSetup.jsx        # Match configuration and roster selection
-│   ├── MatchStats.jsx        # Post-match statistics and player detail
-│   ├── SeasonDashboard.jsx   # Season-wide aggregated stats
-│   └── Squad.jsx             # Player roster management
+│   ├── Home.jsx               # Match list, navigation, profile
+│   ├── Login.jsx              # Google auth / guest entry
+│   ├── MatchLive.jsx          # Live match tracking
+│   ├── MatchSetup.jsx         # Match configuration and roster selection
+│   ├── MatchStats.jsx         # Post-match statistics and player detail
+│   ├── PlayerSeasonView.jsx   # Individual player season stats
+│   ├── SeasonDashboard.jsx    # Season-wide aggregated stats
+│   └── Squad.jsx              # Player roster management
 ├── reports/
-│   └── generateReport.js     # PDF report generation
-├── i18n.js                   # ES / EN translations
-├── firebase.js               # Firebase configuration
-└── App.jsx                   # Routing and auth state
+│   └── generateReport.js      # PDF report generation (match, player, season)
+├── i18n.js                    # ES / EN translations
+├── firebase.js                # Firebase configuration
+└── App.jsx                    # Routing and auth state
 ```
+
+---
 
 ## Player Rating Algorithm
 
 Ratings (1–10) are computed using EHF Champions League expected performance data, split by role:
 
-**Field players** — weighted by shot difficulty (wing and 9m shots harder than fast breaks and 7m penalties), penalised for turnovers and exclusions, rewarded for efficiency above expected averages per shot type.
+**Field players** — weighted by shot difficulty: wing shots and 9m attempts are harder than fast breaks and 7m penalties. The score rewards efficiency above expected averages per shot type and penalises turnovers and exclusions.
 
-**Goalkeepers** — compared against expected save % per shot type received, with bonuses for penalty saves and fast-break saves, and a workload volume bonus.
+**Goalkeepers** — compared against expected save % per received shot type, with bonuses for penalty saves and fast-break saves, and a volume bonus for high workload matches.
+
+---
+
+## Live Demo
+
+[handball-stats-sand.vercel.app](https://handball-stats-sand.vercel.app)
+
+---
 
 ## License
 
-MIT
+MIT — built by [Eliot](https://github.com/Elitoq)

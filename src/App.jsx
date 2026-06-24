@@ -79,7 +79,7 @@ export default function App() {
     content = (
       <SeasonDashboard
         onBack={() => setScreen('home')}
-        onOpenMatch={id => { setActiveMatchId(id); setScreen('live') }}
+        onOpenMatch={id => { setActiveMatchId(id); setScreen('stats') }}
         lang={lang}
       />
     )
