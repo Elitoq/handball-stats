@@ -1,11 +1,14 @@
-import { useState } from 'react'
-import { Users, TrendingUp, BarChart2, Activity, Plus, Settings, Globe, Star, LogOut, User } from 'lucide-react'
+import { useState, useRef } from 'react'
+import { Users, TrendingUp, BarChart2, Activity, Plus, Settings, Globe, Star, LogOut, User, Pencil } from 'lucide-react'
 import { loadData, saveData } from '../data/store'
 import { t } from '../i18n'
 
 export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, onSeason, onLangChange, onLogout, user, guest }) {
   const [data, setData]           = useState(loadData)
   const [showSettings, setShowSettings] = useState(false)
+  const [editingName, setEditingName]   = useState(false)
+  const [nameInput, setNameInput]       = useState('')
+  const nameRef = useRef(null)
 
   const matches     = [...data.matches].sort((a, b) => b.createdAt - a.createdAt)
   const showRatings = data.settings?.showRatings ?? true
@@ -18,9 +21,22 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
     if (patch.language) onLangChange?.(patch.language)
   }
 
-  const displayName = user?.displayName ?? null
-  const photoURL    = user?.photoURL    ?? null
-  const initials    = displayName ? displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : null
+  const photoURL   = user?.photoURL ?? null
+  const savedName  = data.settings?.profileName ?? user?.displayName ?? null
+
+  function startEditName() {
+    setNameInput(savedName ?? '')
+    setEditingName(true)
+    setTimeout(() => nameRef.current?.focus(), 30)
+  }
+  function commitName() {
+    const name = nameInput.trim()
+    if (name) {
+      const updated = { ...data, settings: { ...data.settings, profileName: name } }
+      setData(updated); saveData(updated)
+    }
+    setEditingName(false)
+  }
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col" style={{ paddingBottom: 24 }}>
@@ -28,27 +44,45 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
       {/* ── Header centrado ── */}
       <div style={{ padding: '52px 20px 24px', textAlign: 'center', position: 'relative' }}>
 
-        {/* Settings button top-right */}
+        {/* Settings top-right */}
         <button onClick={() => setShowSettings(true)}
           style={{ position: 'absolute', top: 52, right: 20, background: '#111827', border: '1px solid #1f2937', color: '#6b7280', borderRadius: '50%', width: 38, height: 38, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
           <Settings size={16} />
         </button>
 
-        {/* Avatar */}
-        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
-          {photoURL ? (
-            <img src={photoURL} alt="avatar" style={{ width: 64, height: 64, borderRadius: '50%', border: '2px solid #1e3a7a', objectFit: 'cover' }} />
-          ) : (
-            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#0d2456', border: '2px solid #1e3a7a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-              {initials
-                ? <span style={{ color: '#7eb3ff', fontSize: 22, fontWeight: 800 }}>{initials}</span>
-                : <User size={28} color="#7eb3ff" />}
-            </div>
-          )}
+        {/* Logo HS */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
+          <div style={{ width: 72, height: 72, borderRadius: 22, background: '#0d2456', border: '2px solid #1e3a7a', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
+            {photoURL && (
+              <img src={photoURL} alt="avatar" style={{ position: 'absolute', bottom: -6, right: -6, width: 28, height: 28, borderRadius: '50%', border: '2px solid #030712', objectFit: 'cover' }} />
+            )}
+            <span style={{ color: '#7eb3ff', fontSize: 30, fontWeight: 900, letterSpacing: -2 }}>HS</span>
+          </div>
         </div>
 
-        <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>Handball Stats</h1>
-        <p style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>{t('home.subtitle', lang)}</p>
+        {/* Nombre editable */}
+        {editingName ? (
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
+            <input
+              ref={nameRef}
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              onBlur={commitName}
+              onKeyDown={e => e.key === 'Enter' && commitName()}
+              style={{ background: '#111827', border: '1px solid #1e3a7a', color: 'white', borderRadius: 10, padding: '6px 12px', fontSize: 22, fontWeight: 800, textAlign: 'center', outline: 'none', width: 220 }}
+              placeholder="Tu nombre"
+            />
+          </div>
+        ) : (
+          <button onClick={startEditName}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '0 auto 4px' }}>
+            <span style={{ fontSize: 24, fontWeight: 800, color: 'white', letterSpacing: -0.5 }}>
+              {savedName ?? 'Handball Stats'}
+            </span>
+            <Pencil size={14} color="#4b5563" />
+          </button>
+        )}
+        <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>{t('home.subtitle', lang)}</p>
 
         {/* Nav pills */}
         <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
@@ -200,26 +234,30 @@ function MatchCard({ match, onOpen, onStats, lang }) {
 
   return (
     <div style={{ background: '#0d1117', border: '1px solid #1f2937', borderRadius: 20, overflow: 'hidden' }}>
-      {/* Score bar */}
-      <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
+
+      {/* Top: result badge + rival + date */}
+      <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        {/* Result badge */}
+        <div style={{ width: 36, height: 36, borderRadius: 10, background: resultColor + '18', border: `1.5px solid ${resultColor}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+          <span style={{ fontSize: 13, fontWeight: 800, color: resultColor }}>{resultLabel}</span>
+        </div>
+        {/* Team info */}
         <div style={{ flex: 1, minWidth: 0 }}>
-          <div style={{ fontWeight: 700, fontSize: 15, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-            {match.teamName} <span style={{ color: '#374151' }}>vs</span> {match.rival}
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            vs {match.rival}
           </div>
           <div style={{ color: '#4b5563', fontSize: 12, marginTop: 2 }}>{match.date}</div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
-            <div style={{ fontSize: 10, color: '#4b5563', marginTop: 1 }}>{lang === 'en' ? 'US' : 'NOS'}</div>
+        {/* Score */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexShrink: 0 }}>
+          <div style={{ textAlign: 'center', minWidth: 32 }}>
+            <div style={{ fontSize: 30, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
+            <div style={{ fontSize: 9, color: '#4b5563', marginTop: 2, textTransform: 'uppercase' }}>{lang === 'en' ? 'us' : 'nos'}</div>
           </div>
-          <div style={{ color: '#374151', fontSize: 20, fontWeight: 300 }}>—</div>
-          <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: 28, fontWeight: 800, color: '#f87171', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{rival}</div>
-            <div style={{ fontSize: 10, color: '#4b5563', marginTop: 1 }}>{lang === 'en' ? 'THEM' : 'RIV'}</div>
-          </div>
-          <div style={{ width: 30, height: 30, borderRadius: '50%', background: resultColor + '22', border: `1.5px solid ${resultColor}55`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <span style={{ fontSize: 12, fontWeight: 800, color: resultColor }}>{resultLabel}</span>
+          <div style={{ color: '#374151', fontSize: 22, fontWeight: 300, paddingBottom: 10 }}>–</div>
+          <div style={{ textAlign: 'center', minWidth: 32 }}>
+            <div style={{ fontSize: 30, fontWeight: 800, color: '#f87171', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{rival}</div>
+            <div style={{ fontSize: 9, color: '#4b5563', marginTop: 2, textTransform: 'uppercase' }}>{lang === 'en' ? 'them' : 'riv'}</div>
           </div>
         </div>
       </div>
@@ -227,10 +265,10 @@ function MatchCard({ match, onOpen, onStats, lang }) {
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderTop: '1px solid #1a2030', padding: '8px 0' }}>
         {[
-          { label: t('stat.saves', lang),      value: saves,      color: '#3b82f6' },
+          { label: t('stat.saves', lang),           value: saves,                         color: '#3b82f6' },
           { label: lang === 'en' ? 'Eff%' : 'Ef%', value: effPct != null ? `${effPct}%` : '—', color: '#7eb3ff' },
-          { label: t('stat.excl_short', lang), value: exclusions, color: '#ef4444' },
-          { label: t('stat.turnovers', lang),  value: turnovers,  color: '#f97316' },
+          { label: t('stat.excl_short', lang),      value: exclusions,                    color: '#ef4444' },
+          { label: t('stat.turnovers', lang),        value: turnovers,                     color: '#f97316' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ textAlign: 'center', padding: '4px 0' }}>
             <div style={{ color, fontSize: 17, fontWeight: 700 }}>{value}</div>
@@ -240,7 +278,7 @@ function MatchCard({ match, onOpen, onStats, lang }) {
       </div>
 
       {/* Actions */}
-      <div style={{ display: 'flex', gap: 0, borderTop: '1px solid #1a2030' }}>
+      <div style={{ display: 'flex', borderTop: '1px solid #1a2030' }}>
         <button onClick={onOpen}
           style={{ flex: 1, background: 'none', border: 'none', color: '#9ca3af', padding: '12px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', borderRight: '1px solid #1a2030' }}>
           {match.finished ? t('home.view', lang) : t('home.continue', lang)}
