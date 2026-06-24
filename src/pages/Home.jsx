@@ -18,34 +18,59 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
     if (patch.language) onLangChange?.(patch.language)
   }
 
+  const displayName = user?.displayName ?? null
+  const photoURL    = user?.photoURL    ?? null
+  const initials    = displayName ? displayName.split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase() : null
+
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col" style={{ paddingBottom: 24 }}>
-      <div className="px-4 pt-12 pb-4 flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">Handball Stats</h1>
-          <p className="text-gray-500 text-sm mt-1">{t('home.subtitle', lang)}</p>
+
+      {/* ── Header centrado ── */}
+      <div style={{ padding: '52px 20px 24px', textAlign: 'center', position: 'relative' }}>
+
+        {/* Settings button top-right */}
+        <button onClick={() => setShowSettings(true)}
+          style={{ position: 'absolute', top: 52, right: 20, background: '#111827', border: '1px solid #1f2937', color: '#6b7280', borderRadius: '50%', width: 38, height: 38, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Settings size={16} />
+        </button>
+
+        {/* Avatar */}
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 14 }}>
+          {photoURL ? (
+            <img src={photoURL} alt="avatar" style={{ width: 64, height: 64, borderRadius: '50%', border: '2px solid #1e3a7a', objectFit: 'cover' }} />
+          ) : (
+            <div style={{ width: 64, height: 64, borderRadius: '50%', background: '#0d2456', border: '2px solid #1e3a7a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              {initials
+                ? <span style={{ color: '#7eb3ff', fontSize: 22, fontWeight: 800 }}>{initials}</span>
+                : <User size={28} color="#7eb3ff" />}
+            </div>
+          )}
         </div>
-        <div className="flex flex-col gap-2 mt-1">
-          <button onClick={onSquad} style={topBtn('#1e3a7a', '#7eb3ff')}>
+
+        <h1 style={{ fontSize: 26, fontWeight: 800, margin: 0, letterSpacing: -0.5 }}>Handball Stats</h1>
+        <p style={{ color: '#6b7280', fontSize: 13, marginTop: 4 }}>{t('home.subtitle', lang)}</p>
+
+        {/* Nav pills */}
+        <div style={{ display: 'flex', gap: 8, justifyContent: 'center', marginTop: 20 }}>
+          <button onClick={onSquad} style={navPill}>
             <Users size={14} /> {t('home.squad', lang)}
           </button>
-          <button onClick={onSeason} style={topBtn('#1e3a7a', '#7eb3ff')}>
+          <button onClick={onSeason} style={navPill}>
             <TrendingUp size={14} /> {t('home.season', lang)}
-          </button>
-          <button onClick={() => setShowSettings(true)} style={topBtn('#374151', '#6b7280')}>
-            <Settings size={14} /> {t('home.settings', lang)}
           </button>
         </div>
       </div>
 
-      <div className="px-4">
+      {/* ── New match button ── */}
+      <div style={{ padding: '0 16px 24px' }}>
         <button onClick={onNewMatch}
           style={{ width: '100%', background: '#1a56db', color: 'white', fontWeight: 700, padding: '18px 0', borderRadius: 18, fontSize: 17, border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           <Plus size={20} strokeWidth={2.5} /> {t('home.new_match', lang)}
         </button>
       </div>
 
-      <div className="flex-1 px-4 mt-6 pb-6">
+      {/* ── Match list ── */}
+      <div className="flex-1 px-4 pb-6">
         {matches.length === 0 ? (
           <div className="text-center py-16">
             <Activity size={48} color="#374151" style={{ margin: '0 auto 16px' }} />
@@ -153,9 +178,7 @@ function Toggle({ value, onChange, lang }) {
 
 function Divider() { return <div style={{ height: 1, background: '#1f2937', margin: '0 20px' }} /> }
 
-function topBtn(borderColor, color) {
-  return { background: '#111827', border: `1px solid ${borderColor}`, color, borderRadius: 12, padding: '8px 14px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }
-}
+const navPill = { background: '#0d1117', border: '1px solid #1e3a7a', color: '#7eb3ff', borderRadius: 99, padding: '8px 18px', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }
 
 function MatchCard({ match, onOpen, onStats, lang }) {
   const goals      = match.events.filter(e => e.type === 'goal').length
