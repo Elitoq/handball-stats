@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react'
 import { Activity, Dumbbell, Users, Clock, ChevronDown, ChevronUp, Search, X } from 'lucide-react'
 import { EXERCISES } from '../data/exercises'
 import CourtDiagram from '../components/CourtDiagram'
+import PhysicalDiagram from '../components/PhysicalDiagram'
 import { t } from '../i18n'
 
 // ── filter definitions ────────────────────────────────────────
@@ -243,7 +244,10 @@ function ExerciseCard({ exercise, lang, expanded, onToggle }) {
 
       {expanded && (
         <div style={{ padding: '0 16px 16px', borderTop: '1px solid #1f2937' }}>
-          <CourtDiagram id={exercise.id} />
+          {exercise.type === 'court'
+            ? <CourtDiagram id={exercise.id} />
+            : <PhysicalDiagram id={exercise.id} />
+          }
           <p style={{ color: '#d1d5db', fontSize: 14, lineHeight: 1.65, margin: '14px 0' }}>{desc}</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             <Chip icon={Clock}    label={`${exercise.duration} ${t('ex.min', lang)}`}  color="#60a5fa" />
