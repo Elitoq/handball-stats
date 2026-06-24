@@ -80,6 +80,23 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
     saveData(updated)
   }
 
+  function undoLast() {
+    if (!match.events.length) return
+    const last = match.events[match.events.length - 1]
+    deleteEvent(last.id)
+  }
+
+  function adjustRivalGoals(delta) {
+    const updated = {
+      ...data,
+      matches: data.matches.map(m =>
+        m.id !== matchId ? m : { ...m, rivalGoals: Math.max(0, (m.rivalGoals ?? 0) + delta) }
+      ),
+    }
+    setData(updated)
+    saveData(updated)
+  }
+
   function saveNotes(notes) {
     const updated = {
       ...data,
@@ -128,15 +145,19 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
         {/* Scoreboard */}
         <div style={{ marginTop: 8 }}>
           <div style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 12 }}>{match.teamName} vs {match.rival}</div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 24 }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 64, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
-              <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4 }}>{match.teamName}</div>
+              <div style={{ fontSize: 68, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
+              <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4, fontWeight: 600 }}>{match.teamName}</div>
             </div>
             <div style={{ color: '#374151', fontSize: 32, fontWeight: 300 }}>—</div>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 64, fontWeight: 800, color: '#f87171', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{match.rivalGoals ?? 0}</div>
-              <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4 }}>{match.rival}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <button onClick={() => adjustRivalGoals(-1)} style={{ background: '#1f2937', border: '1px solid #374151', color: '#6b7280', width: 28, height: 28, borderRadius: '50%', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, flexShrink: 0 }}>−</button>
+                <div style={{ fontSize: 68, fontWeight: 800, color: '#f87171', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{match.rivalGoals ?? 0}</div>
+                <button onClick={() => adjustRivalGoals(1)} style={{ background: '#1f2937', border: '1px solid #374151', color: '#6b7280', width: 28, height: 28, borderRadius: '50%', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, flexShrink: 0 }}>+</button>
+              </div>
+              <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4, fontWeight: 600 }}>{match.rival}</div>
             </div>
           </div>
         </div>
@@ -144,17 +165,12 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
         {/* Period */}
         <div className="flex items-center justify-center gap-3 mt-3">
           <div style={{ display: 'flex', borderRadius: 999, overflow: 'hidden', border: '1px solid #1e3a7a' }}>
-            <div style={{ padding: '4px 16px', fontSize: 13, fontWeight: 600, background: period === 1 ? '#1a56db' : '#111827', color: period === 1 ? 'white' : '#4b5563' }}>{t('live.p1', lang)}</div>
-            <div style={{ padding: '4px 16px', fontSize: 13, fontWeight: 600, background: period === 2 ? '#1a56db' : '#111827', color: period === 2 ? 'white' : '#4b5563' }}>{t('live.p2', lang)}</div>
+            <button onClick={() => { setPeriod(1); setRunning(false); setMinute(0) }}
+              style={{ padding: '4px 16px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: period === 1 ? '#1a56db' : '#111827', color: period === 1 ? 'white' : '#4b5563' }}>{t('live.p1', lang)}</button>
+            <button onClick={() => { setPeriod(2); setRunning(false); setMinute(30) }}
+              style={{ padding: '4px 16px', fontSize: 13, fontWeight: 600, border: 'none', cursor: 'pointer', background: period === 2 ? '#1a56db' : '#111827', color: period === 2 ? 'white' : '#4b5563' }}>{t('live.p2', lang)}</button>
           </div>
-          {period === 1 ? (
-            <button
-              onClick={() => { setPeriod(2); setRunning(false); setMinute(30) }}
-              style={{ color: '#7eb3ff', fontSize: 12, fontWeight: 600, border: '1px solid #1e3a7a', borderRadius: 999, padding: '4px 12px', background: 'none', cursor: 'pointer' }}
-            >{t('live.to_p2', lang)}</button>
-          ) : (
-            <span className="text-gray-600 text-xs">{t('live.second_half', lang)}</span>
-          )}
+          <span style={{ color: '#4b5563', fontSize: 12 }}>{period === 1 ? t('live.p1_desc', lang) : t('live.second_half', lang)}</span>
         </div>
 
         {/* Timer */}
@@ -212,8 +228,12 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
       {/* Recent events */}
       {match.events.length > 0 && (
         <div className="px-4 pb-4">
-          <div className="mb-2">
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
             <span className="text-gray-500 text-xs uppercase tracking-wide">{t('live.recent', lang)}</span>
+            <button onClick={undoLast}
+              style={{ display: 'flex', alignItems: 'center', gap: 5, background: '#1f2937', border: '1px solid #374151', color: '#9ca3af', borderRadius: 8, padding: '4px 10px', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>
+              ↩ {lang === 'en' ? 'Undo' : 'Deshacer'}
+            </button>
           </div>
           <div className="space-y-1 max-h-36 overflow-y-auto">
             {[...match.events].reverse().slice(0, 8).map(ev => (

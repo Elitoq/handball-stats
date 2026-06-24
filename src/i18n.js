@@ -2,7 +2,6 @@ const T = {
   es: {
     // ── Nav / Settings ──────────────────────────────────────────
     'nav.stats':              'Stats',
-    'nav.exercises':          'Ejercicios',
     'settings.title':         'Ajustes',
     'settings.language':      'Idioma',
     'settings.language.desc': 'Cambia el idioma de la app',
@@ -74,9 +73,10 @@ const T = {
     'setup.back':        '← Atrás',
 
     // ── Match live ───────────────────────────────────────────────
-    'live.p1':          '1ª',
-    'live.p2':          '2ª',
+    'live.p1':          '1ª parte',
+    'live.p2':          '2ª parte',
     'live.to_p2':       '→ 2ª parte',
+    'live.p1_desc':     'Primera parte',
     'live.second_half': 'Segunda parte',
     'live.recent':      'Últimas acciones',
     'live.notes_title': 'Notas del partido',
@@ -172,16 +172,6 @@ const T = {
     'season.saves':       'paradas',
     'season.efficiency':  '% eficacia',
 
-    // ── Exercises ────────────────────────────────────────────────
-    'ex.title':    'Ejercicios',
-    'ex.all':      'Todos',
-    'ex.court':    'Pista',
-    'ex.physical': 'Físico',
-    'ex.min':      'min',
-    'ex.player':   'persona',
-    'ex.players':  'personas',
-    'ex.empty':    'Sin ejercicios en esta categoría',
-
     // ── Value translations (stored in Spanish, displayed translated)
     'shot.Posicional':   'Posicional',
     'shot.9 metros':     '9 metros',
@@ -206,7 +196,6 @@ const T = {
   en: {
     // ── Nav / Settings ──────────────────────────────────────────
     'nav.stats':              'Stats',
-    'nav.exercises':          'Exercises',
     'settings.title':         'Settings',
     'settings.language':      'Language',
     'settings.language.desc': 'Change the app language',
@@ -278,9 +267,10 @@ const T = {
     'setup.back':        '← Back',
 
     // ── Match live ───────────────────────────────────────────────
-    'live.p1':          '1st',
-    'live.p2':          '2nd',
+    'live.p1':          '1st half',
+    'live.p2':          '2nd half',
     'live.to_p2':       '→ 2nd half',
+    'live.p1_desc':     'First half',
     'live.second_half': 'Second half',
     'live.recent':      'Recent actions',
     'live.notes_title': 'Match notes',
@@ -376,15 +366,7 @@ const T = {
     'season.saves':       'saves',
     'season.efficiency':  'efficiency',
 
-    // ── Exercises ────────────────────────────────────────────────
-    'ex.title':    'Exercises',
-    'ex.all':      'All',
-    'ex.court':    'Court',
-    'ex.physical': 'Physical',
-    'ex.min':      'min',
-    'ex.player':   'person',
-    'ex.players':  'people',
-    'ex.empty':    'No exercises in this category',
+
 
     // ── Value translations ──────────────────────────────────────
     'shot.Posicional':   'Positional',

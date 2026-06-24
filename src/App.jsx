@@ -15,7 +15,6 @@ export default function App() {
   const [guest, setGuest]             = useState(false)
   const [syncing, setSyncing]         = useState(false)
   const [screen, setScreen]           = useState('home')
-  const [section, setSection]         = useState('stats')
   const [activeMatchId, setActiveMatchId] = useState(null)
   const [lang, setLang]               = useState(() => loadData().settings?.language ?? 'es')
 
@@ -35,7 +34,6 @@ export default function App() {
     if (user) await signOut(auth)
     setGuest(false)
     setScreen('home')
-    setSection('stats')
   }
 
   if (user === undefined || syncing) {
@@ -48,13 +46,6 @@ export default function App() {
   }
 
   if (!user && !guest) return <Login onGuest={() => setGuest(true)} />
-
-  const showNav = screen === 'home'
-
-  function handleSection(s) {
-    setSection(s)
-    setScreen('home')
-  }
 
   let content
   if (screen === 'setup') {

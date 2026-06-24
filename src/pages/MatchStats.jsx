@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { User, Shield, Award, FileText, ChevronLeft, Target, ShieldOff, UserMinus, ArrowRightLeft, Sparkles } from 'lucide-react'
+import { User, Shield, Award, FileText, ChevronLeft, Target, ShieldOff, UserMinus, ArrowRightLeft } from 'lucide-react'
 import { loadData, getPlayerStats, calcPlayerRating, ratingLabel, ratingColor, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 import { printMatchReport, printPlayerMatchReport } from '../reports/generateReport'
 import { t, tv } from '../i18n'
@@ -34,8 +34,6 @@ export default function MatchStats({ matchId, onBack, lang = 'es' }) {
 
 function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
   const [periodFilter, setPeriodFilter] = useState(0)
-  const [aiState, setAiState]           = useState('idle') // 'idle' | 'loading' | 'done' | 'error'
-  const [aiSummary, setAiSummary]       = useState('')
   const showRatings = loadData().settings?.showRatings ?? true
 
   const hasPeriods = match.events.some(e => e.period === 2)
@@ -51,40 +49,6 @@ function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
   const conceded = evs.filter(e => e.type === 'conceded')
   const exclusions = evs.filter(e => e.type === 'exclusion')
   const turnovers = evs.filter(e => e.type === 'turnover')
-
-  async function analyzeMatch() {
-    setAiState('loading')
-    const matchData = {
-      rival: match.rival,
-      date: match.date,
-      goals: goals.length,
-      misses: misses.length,
-      efficiency: goals.length + misses.length > 0
-        ? Math.round(goals.length / (goals.length + misses.length) * 100) : 0,
-      saves: saves.length,
-      conceded: conceded.length,
-      savePct: saves.length + conceded.length > 0
-        ? Math.round(saves.length / (saves.length + conceded.length) * 100) : 0,
-      exclusions: exclusions.length,
-      turnovers: turnovers.length,
-      players: match.players.map(p => {
-        const s = getPlayerStats(match, p.id)
-        return { name: p.name, role: p.role, goals: s.goals, saves: s.saves, misses: s.misses, exclusions: s.exclusions }
-      }).filter(p => p.goals + p.saves + p.misses + p.exclusions > 0),
-    }
-    try {
-      const res = await fetch('/api/analyze-match', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({ matchData }),
-      })
-      const data = await res.json()
-      if (data.summary) { setAiSummary(data.summary); setAiState('done') }
-      else setAiState('error')
-    } catch {
-      setAiState('error')
-    }
-  }
 
   const filteredMatch = periodFilter === 0 ? match : { ...match, events: evs }
   const playersWithStats = match.players
@@ -173,39 +137,6 @@ function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
             </Section>
           )
         })()}
-
-        <Section title={lang === 'en' ? 'AI Analysis' : 'Análisis IA'}>
-          {aiState === 'idle' && (
-            <button onClick={analyzeMatch}
-              style={{ width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, padding: '14px', borderRadius: 12, border: '1px solid #1e3a7a', background: '#0a1628', cursor: 'pointer', color: '#7eb3ff', fontWeight: 600, fontSize: 14 }}>
-              <Sparkles size={16} /> {lang === 'en' ? 'Generate match analysis' : 'Generar análisis del partido'}
-            </button>
-          )}
-          {aiState === 'loading' && (
-            <div style={{ textAlign: 'center', padding: '18px 0', color: '#4b5563', fontSize: 13 }}>
-              {lang === 'en' ? 'Analysing…' : 'Analizando…'}
-            </div>
-          )}
-          {aiState === 'done' && (
-            <div style={{ background: '#0a1628', border: '1px solid #1e3a7a', borderRadius: 12, padding: '16px', color: '#d1d5db', fontSize: 14, lineHeight: 1.7 }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 10, color: '#7eb3ff', fontWeight: 600, fontSize: 13 }}>
-                <Sparkles size={14} /> {lang === 'en' ? 'AI Summary' : 'Resumen IA'}
-              </div>
-              {aiSummary}
-              <button onClick={() => setAiState('idle')} style={{ marginTop: 12, background: 'none', border: 'none', color: '#4b5563', fontSize: 12, cursor: 'pointer', padding: 0 }}>
-                {lang === 'en' ? 'Regenerate' : 'Regenerar'}
-              </button>
-            </div>
-          )}
-          {aiState === 'error' && (
-            <div style={{ textAlign: 'center', padding: '14px', color: '#f87171', fontSize: 13 }}>
-              {lang === 'en' ? 'Error generating analysis.' : 'Error al generar el análisis.'}{' '}
-              <button onClick={() => setAiState('idle')} style={{ background: 'none', border: 'none', color: '#60a5fa', fontSize: 13, cursor: 'pointer', padding: 0, textDecoration: 'underline' }}>
-                {lang === 'en' ? 'Retry' : 'Reintentar'}
-              </button>
-            </div>
-          )}
-        </Section>
 
         {playersWithStats.length > 0 && (
           <Section title={t('mstats.players', lang)}>
@@ -459,56 +390,83 @@ function PlayerRow({ player, onSelect, lang }) {
   )
 }
 
+// Goal heatmap — drawn as an actual goal frame (3m × 2m, 6 zones)
+// zones order: [IzqAlto, CentroAlto, DerAlto, IzqBajo, CentroBajo, DerBajo]
 function ZoneHeatmap({ successEvents, totalEvents, color, lang }) {
   const zones = GOAL_ZONES.slice(0, 6)
   const isBlue = color.includes('2563')
 
   const data = zones.map(z => {
     const success = successEvents.filter(e => e.details?.zone === z).length
-    const total = totalEvents.filter(e => e.details?.zone === z).length
-    const pct = total > 0 ? Math.round(success / total * 100) : null
+    const total   = totalEvents.filter(e => e.details?.zone === z).length
+    const pct     = total > 0 ? Math.round(success / total * 100) : null
     return { success, total, pct }
   })
 
   const maxSuccess = Math.max(...data.map(d => d.success), 1)
 
-  function cellBg(success) {
-    if (success === 0) return '#111827'
-    const tVal = success / maxSuccess
-    if (isBlue) return tVal < 0.4 ? '#1e3a5f' : tVal < 0.7 ? '#1d4ed8' : '#3b82f6'
-    return tVal < 0.4 ? '#14532d' : tVal < 0.7 ? '#15803d' : '#22c55e'
+  function cellFill(success) {
+    if (success === 0) return 'rgba(255,255,255,0.04)'
+    const t = success / maxSuccess
+    if (isBlue) return t < 0.35 ? '#1e3a5f' : t < 0.65 ? '#1d4ed8' : '#3b82f6'
+    return t < 0.35 ? '#14532d' : t < 0.65 ? '#15803d' : '#22c55e'
   }
 
   const hasAny = data.some(d => d.total > 0)
+  // SVG dimensions: 300 × 160, goal frame with 3px posts
+  const W = 300, H = 160
+  const pad = 20                   // side space for post labels
+  const gW = W - pad * 2           // goal width
+  const gH = H - 30                // goal height (top 30px for labels below)
+  const zW = gW / 3, zH = gH / 2
+  const post = 4
+
+  const cells = [
+    // top row
+    { x: pad,           y: 0,   w: zW, h: zH, i: 0 },
+    { x: pad + zW,      y: 0,   w: zW, h: zH, i: 1 },
+    { x: pad + zW * 2,  y: 0,   w: zW, h: zH, i: 2 },
+    // bottom row
+    { x: pad,           y: zH,  w: zW, h: zH, i: 3 },
+    { x: pad + zW,      y: zH,  w: zW, h: zH, i: 4 },
+    { x: pad + zW * 2,  y: zH,  w: zW, h: zH, i: 5 },
+  ]
 
   return (
-    <div style={{ background: '#1f2937', borderRadius: 12, padding: 12 }}>
-      <div style={{ color: '#6b7280', fontSize: 11, textAlign: 'center', marginBottom: 8 }}>{t('mstats.net', lang)}</div>
-      <div style={{ border: '2px solid #374151', borderRadius: 8, overflow: 'hidden' }}>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
-          {data.slice(0, 3).map((d, i) => (
-            <DistCell key={i} label={ZONE_LABELS[i]} success={d.success} total={d.total} pct={d.pct} bg={cellBg(d.success)} border={i < 2} />
-          ))}
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', borderTop: '1px solid #374151' }}>
-          {data.slice(3, 6).map((d, i) => (
-            <DistCell key={i+3} label={ZONE_LABELS[i+3]} success={d.success} total={d.total} pct={d.pct} bg={cellBg(d.success)} border={i < 2} />
-          ))}
-        </div>
-      </div>
+    <div style={{ background: '#111827', borderRadius: 14, padding: '14px 12px 10px' }}>
+      <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', display: 'block' }}>
+        {/* Zone cells */}
+        {cells.map(({ x, y, w, h, i }) => (
+          <g key={i}>
+            <rect x={x} y={y} width={w} height={h} fill={cellFill(data[i].success)} rx={0} />
+            {/* dividers */}
+            {i === 0 || i === 3 ? null : <line x1={x} y1={y} x2={x} y2={y + h} stroke="#1f2937" strokeWidth={1} />}
+            {i < 3 && <line x1={x} y1={zH} x2={x + w} y2={zH} stroke="#1f2937" strokeWidth={1} />}
+            {/* label */}
+            {data[i].total > 0 ? (
+              <>
+                <text x={x + w / 2} y={y + h / 2 - 7} textAnchor="middle" fill="white" fontSize={14} fontWeight="700">{`${data[i].success}/${data[i].total}`}</text>
+                <text x={x + w / 2} y={y + h / 2 + 10} textAnchor="middle" fill="rgba(255,255,255,0.65)" fontSize={12}>{data[i].pct}%</text>
+              </>
+            ) : (
+              <text x={x + w / 2} y={y + h / 2 + 5} textAnchor="middle" fill="rgba(255,255,255,0.18)" fontSize={13}>—</text>
+            )}
+          </g>
+        ))}
+        {/* Goal frame — posts and crossbar */}
+        <rect x={pad - post} y={-2} width={post} height={gH + 2} fill="#6b7280" rx={2} />
+        <rect x={pad + gW} y={-2} width={post} height={gH + 2} fill="#6b7280" rx={2} />
+        <rect x={pad - post} y={-2} width={gW + post * 2} height={post} fill="#6b7280" rx={2} />
+        {/* Ground line */}
+        <line x1={pad - post} y1={gH} x2={pad + gW + post} y2={gH} stroke="#374151" strokeWidth={1.5} />
+        {/* Zone labels below */}
+        {[lang === 'en' ? 'Left' : 'Izq', lang === 'en' ? 'Centre' : 'Centro', lang === 'en' ? 'Right' : 'Der'].map((lbl, i) => (
+          <text key={lbl} x={pad + zW * i + zW / 2} y={gH + 20} textAnchor="middle" fill="#4b5563" fontSize={10}>{lbl}</text>
+        ))}
+      </svg>
       {!hasAny && (
-        <div style={{ color: '#4b5563', fontSize: 12, textAlign: 'center', marginTop: 6 }}>{t('mstats.no_zone', lang)}</div>
+        <div style={{ color: '#4b5563', fontSize: 12, textAlign: 'center', marginTop: 4 }}>{t('mstats.no_zone', lang)}</div>
       )}
-    </div>
-  )
-}
-
-function DistCell({ label, success, total, pct, bg, border }) {
-  return (
-    <div style={{ background: bg, padding: '12px 6px', textAlign: 'center', borderRight: border ? '1px solid #374151' : 'none' }}>
-      <div style={{ color: 'white', fontWeight: 700, fontSize: 18 }}>{total > 0 ? `${success}/${total}` : '-'}</div>
-      <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: 12, fontWeight: 600 }}>{pct != null ? `${pct}%` : ''}</div>
-      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, marginTop: 1 }}>{label}</div>
     </div>
   )
 }

@@ -19,7 +19,7 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white flex flex-col" style={{ paddingBottom: 72 }}>
+    <div className="min-h-screen bg-gray-950 text-white flex flex-col" style={{ paddingBottom: 24 }}>
       <div className="px-4 pt-12 pb-4 flex items-start justify-between">
         <div>
           <h1 className="text-3xl font-bold">Handball Stats</h1>
@@ -159,43 +159,71 @@ function topBtn(borderColor, color) {
 
 function MatchCard({ match, onOpen, onStats, lang }) {
   const goals      = match.events.filter(e => e.type === 'goal').length
+  const misses     = match.events.filter(e => e.type === 'miss').length
   const saves      = match.events.filter(e => e.type === 'save').length
   const exclusions = match.events.filter(e => e.type === 'exclusion').length
   const turnovers  = match.events.filter(e => e.type === 'turnover').length
+  const rival      = match.rivalGoals ?? 0
+  const effPct     = goals + misses > 0 ? Math.round(goals / (goals + misses) * 100) : null
+
+  const resultColor = !match.finished ? '#7eb3ff'
+    : goals > rival ? '#4ade80'
+    : goals < rival ? '#f87171'
+    : '#facc15'
+  const resultLabel = !match.finished ? t('home.live', lang)
+    : goals > rival ? (lang === 'en' ? 'W' : 'V')
+    : goals < rival ? (lang === 'en' ? 'L' : 'D')
+    : (lang === 'en' ? 'D' : 'E')
 
   return (
-    <div className="bg-gray-800 rounded-2xl p-4">
-      <div className="flex items-start justify-between mb-3">
-        <div>
-          <div className="font-semibold text-white">{match.teamName} vs {match.rival}</div>
-          <div className="text-gray-500 text-xs mt-0.5">{match.date}</div>
+    <div style={{ background: '#0d1117', border: '1px solid #1f2937', borderRadius: 20, overflow: 'hidden' }}>
+      {/* Score bar */}
+      <div style={{ padding: '14px 16px 10px', display: 'flex', alignItems: 'center', gap: 12 }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div style={{ fontWeight: 700, fontSize: 15, color: 'white', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            {match.teamName} <span style={{ color: '#374151' }}>vs</span> {match.rival}
+          </div>
+          <div style={{ color: '#4b5563', fontSize: 12, marginTop: 2 }}>{match.date}</div>
         </div>
-        <span style={{ fontSize: 11, fontWeight: 600, padding: '3px 10px', borderRadius: 999,
-          background: match.finished ? '#1f2937' : '#0d2456',
-          color: match.finished ? '#6b7280' : '#7eb3ff',
-          border: `1px solid ${match.finished ? '#374151' : '#1e3a7a'}` }}>
-          {match.finished ? t('home.finished', lang) : t('home.live', lang)}
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexShrink: 0 }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
+            <div style={{ fontSize: 10, color: '#4b5563', marginTop: 1 }}>{lang === 'en' ? 'US' : 'NOS'}</div>
+          </div>
+          <div style={{ color: '#374151', fontSize: 20, fontWeight: 300 }}>—</div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: 28, fontWeight: 800, color: '#f87171', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{rival}</div>
+            <div style={{ fontSize: 10, color: '#4b5563', marginTop: 1 }}>{lang === 'en' ? 'THEM' : 'RIV'}</div>
+          </div>
+          <div style={{ width: 30, height: 30, borderRadius: '50%', background: resultColor + '22', border: `1.5px solid ${resultColor}55`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <span style={{ fontSize: 12, fontWeight: 800, color: resultColor }}>{resultLabel}</span>
+          </div>
+        </div>
       </div>
-      <div className="grid grid-cols-4 text-center mb-3">
+
+      {/* Stats row */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderTop: '1px solid #1a2030', padding: '8px 0' }}>
         {[
-          { label: t('stat.goals', lang),      value: goals,      color: '#22c55e' },
           { label: t('stat.saves', lang),      value: saves,      color: '#3b82f6' },
+          { label: lang === 'en' ? 'Eff%' : 'Ef%', value: effPct != null ? `${effPct}%` : '—', color: '#7eb3ff' },
           { label: t('stat.excl_short', lang), value: exclusions, color: '#ef4444' },
           { label: t('stat.turnovers', lang),  value: turnovers,  color: '#f97316' },
         ].map(({ label, value, color }) => (
-          <div key={label}>
-            <div style={{ color, fontSize: 18, fontWeight: 700 }}>{value}</div>
-            <div className="text-gray-600 text-xs">{label}</div>
+          <div key={label} style={{ textAlign: 'center', padding: '4px 0' }}>
+            <div style={{ color, fontSize: 17, fontWeight: 700 }}>{value}</div>
+            <div style={{ color: '#4b5563', fontSize: 10, marginTop: 1 }}>{label}</div>
           </div>
         ))}
       </div>
-      <div className="flex gap-2">
-        <button onClick={onOpen} className="flex-1 bg-gray-700 active:bg-gray-600 text-white rounded-xl py-2.5 text-sm font-medium">
+
+      {/* Actions */}
+      <div style={{ display: 'flex', gap: 0, borderTop: '1px solid #1a2030' }}>
+        <button onClick={onOpen}
+          style={{ flex: 1, background: 'none', border: 'none', color: '#9ca3af', padding: '12px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', borderRight: '1px solid #1a2030' }}>
           {match.finished ? t('home.view', lang) : t('home.continue', lang)}
         </button>
         <button onClick={onStats}
-          style={{ flex: 1, background: '#0d2456', color: '#7eb3ff', border: '1px solid #1e3a7a', borderRadius: 12, padding: '10px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+          style={{ flex: 1, background: 'none', border: 'none', color: '#7eb3ff', padding: '12px 0', fontSize: 13, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
           <BarChart2 size={14} /> {t('stats', lang)}
         </button>
       </div>
