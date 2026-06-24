@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react'
 
-// Map our exercise IDs to wger search terms (English)
 const WGER_TERMS = {
   p01: 'barbell squat',
   p02: 'barbell bench press',
@@ -21,53 +20,38 @@ const WGER_TERMS = {
 
 const cache = new Map()
 
-async function fetchWgerImage(term) {
-  if (cache.has(term)) return cache.get(term)
-
+async function fetchImage(id) {
+  if (cache.has(id)) return cache.get(id)
+  const term = WGER_TERMS[id]
+  if (!term) { cache.set(id, null); return null }
   try {
-    const searchRes = await fetch(
-      `https://wger.de/api/v2/exercise/search/?term=${encodeURIComponent(term)}&language=english&format=json`
-    )
-    if (!searchRes.ok) { cache.set(term, null); return null }
-    const searchData = await searchRes.json()
-
-    const baseId = searchData.suggestions?.[0]?.data?.base_id
-    if (!baseId) { cache.set(term, null); return null }
-
-    const imgRes = await fetch(
-      `https://wger.de/api/v2/exerciseimage/?exercise_base=${baseId}&is_main=True&format=json`
-    )
-    if (!imgRes.ok) { cache.set(term, null); return null }
-    const imgData = await imgRes.json()
-
-    const url = imgData.results?.[0]?.image ?? null
-    cache.set(term, url)
-    return url
+    const res = await fetch(`/api/wger-image?term=${encodeURIComponent(term)}`)
+    const data = await res.json()
+    cache.set(id, data.url ?? null)
+    return data.url ?? null
   } catch {
-    cache.set(term, null)
+    cache.set(id, null)
     return null
   }
 }
 
 export default function PhysicalDiagram({ id }) {
-  const [state, setState] = useState('loading') // 'loading' | 'ok' | 'none'
+  const [state, setState] = useState('loading')
   const [imgUrl, setImgUrl] = useState(null)
 
-  const term = WGER_TERMS[id]
-
   useEffect(() => {
-    if (!term) { setState('none'); return }
+    if (!WGER_TERMS[id]) { setState('none'); return }
     setState('loading')
-    fetchWgerImage(term).then(url => {
+    fetchImage(id).then(url => {
       if (url) { setImgUrl(url); setState('ok') }
       else setState('none')
     })
-  }, [id, term])
+  }, [id])
 
   if (state === 'none') return null
 
   if (state === 'loading') return (
-    <div style={{ height: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', fontSize: 13 }}>
+    <div style={{ height: 80, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#4b5563', fontSize: 13 }}>
       Cargando imagen…
     </div>
   )
@@ -76,15 +60,7 @@ export default function PhysicalDiagram({ id }) {
     <img
       src={imgUrl}
       alt={id}
-      style={{
-        width: '100%',
-        borderRadius: 10,
-        display: 'block',
-        margin: '12px 0 6px',
-        maxHeight: 240,
-        objectFit: 'contain',
-        background: '#0d1117',
-      }}
+      style={{ width: '100%', borderRadius: 10, display: 'block', margin: '12px 0 6px', maxHeight: 240, objectFit: 'contain', background: '#0d1117' }}
     />
   )
 }
