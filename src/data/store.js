@@ -237,7 +237,7 @@ export function ratingColor(rating) {
 }
 
 export function getPlayerStats(match, playerId) {
-  const evs = match.events.filter(e => e.playerId === playerId)
+  const evs = (match.events ?? []).filter(e => e.playerId === playerId)
   const goals = evs.filter(e => e.type === 'goal').length
   const misses = evs.filter(e => e.type === 'miss').length
   const saves = evs.filter(e => e.type === 'save').length

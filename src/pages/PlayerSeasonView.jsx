@@ -11,7 +11,9 @@ export default function PlayerSeasonView({ player, allMatches, lang = 'es', onBa
   const isGK = player.role === 'goalkeeper'
 
   // Same logic as buildPlayerSeasonReport in generateReport.js
-  const matchRows = allMatches.map(m => {
+  const matchRows = allMatches
+  .filter(m => Array.isArray(m.events))
+  .map(m => {
     const st = getPlayerStats(m, player.id)
     return { match: m, stats: st }
   }).filter(({ stats: st }) =>
