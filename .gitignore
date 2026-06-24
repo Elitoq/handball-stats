@@ -24,3 +24,6 @@ dist-ssr
 *.sw?
 .vercel
 Claude.dmg
+
+# Screenshot tooling (not part of the app)
+docs/take_screenshots.mjs

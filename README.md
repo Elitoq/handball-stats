@@ -3,7 +3,27 @@
 A real-time handball match tracking PWA built for coaches and analysts.
 
 <div align="center">
-  <img src="demo.gif" alt="Handball Stats demo" width="320" />
+
+[![Live Demo](https://img.shields.io/badge/Live%20Demo-handball--stats-blue?style=for-the-badge&logo=vercel)](https://handball-stats-sand.vercel.app)
+[![PWA](https://img.shields.io/badge/PWA-installable-5A0FC8?style=for-the-badge&logo=pwa)](https://handball-stats-sand.vercel.app)
+[![React](https://img.shields.io/badge/React-19-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev)
+[![License](https://img.shields.io/badge/license-MIT-green?style=for-the-badge)](LICENSE)
+
+</div>
+
+<div align="center">
+<table>
+<tr>
+<td align="center"><img src="docs/screenshots/01_home.png" width="220" alt="Match list" /><br/><sub><b>Match list</b></sub></td>
+<td align="center"><img src="docs/screenshots/02_match_stats.png" width="220" alt="Post-match stats" /><br/><sub><b>Post-match stats</b></sub></td>
+<td align="center"><img src="docs/screenshots/03_match_heatmap.png" width="220" alt="Heatmap & MVP" /><br/><sub><b>Heatmap & MVP</b></sub></td>
+</tr>
+<tr>
+<td align="center"><img src="docs/screenshots/04_season_dashboard.png" width="220" alt="Season dashboard" /><br/><sub><b>Season dashboard</b></sub></td>
+<td align="center"><img src="docs/screenshots/05_season_charts.png" width="220" alt="Rankings & charts" /><br/><sub><b>Rankings & charts</b></sub></td>
+<td align="center"><img src="docs/screenshots/06_squad.png" width="220" alt="Squad management" /><br/><sub><b>Squad management</b></sub></td>
+</tr>
+</table>
 </div>
 
 ## Why this exists
