@@ -74,13 +74,18 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
             />
           </div>
         ) : (
-          <button onClick={startEditName}
-            style={{ background: 'none', border: 'none', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, margin: '0 auto 4px' }}>
-            <span style={{ fontSize: 24, fontWeight: 800, color: 'white', letterSpacing: -0.5 }}>
-              {savedName ?? 'Handball Stats'}
-            </span>
-            <Pencil size={14} color="#4b5563" />
-          </button>
+          <div style={{ position: 'relative', display: 'inline-block', marginBottom: 4 }}>
+            <button onClick={startEditName}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>
+              <span style={{ fontSize: 24, fontWeight: 800, color: 'white', letterSpacing: -0.5 }}>
+                {savedName ?? 'Handball Stats'}
+              </span>
+            </button>
+            <button onClick={startEditName}
+              style={{ position: 'absolute', right: -22, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}>
+              <Pencil size={13} color="#4b5563" />
+            </button>
+          </div>
         )}
         <p style={{ color: '#6b7280', fontSize: 13, margin: 0 }}>{t('home.subtitle', lang)}</p>
 
@@ -223,10 +228,12 @@ function MatchCard({ match, onOpen, onStats, lang }) {
   const goals      = match.events.filter(e => e.type === 'goal').length
   const misses     = match.events.filter(e => e.type === 'miss').length
   const saves      = match.events.filter(e => e.type === 'save').length
+  const conceded   = match.events.filter(e => e.type === 'conceded').length
   const exclusions = match.events.filter(e => e.type === 'exclusion').length
   const turnovers  = match.events.filter(e => e.type === 'turnover').length
   const rival      = match.rivalGoals ?? 0
   const effPct     = goals + misses > 0 ? Math.round(goals / (goals + misses) * 100) : null
+  const savePct    = saves + conceded > 0 ? Math.round(saves / (saves + conceded) * 100) : null
 
   const resultColor = !match.finished ? '#7eb3ff'
     : goals > rival ? '#4ade80'
@@ -277,10 +284,10 @@ function MatchCard({ match, onOpen, onStats, lang }) {
       {/* Stats row */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', borderTop: '1px solid #1a2030', padding: '8px 0' }}>
         {[
-          { label: t('stat.saves', lang),           value: saves,                         color: '#3b82f6' },
-          { label: lang === 'en' ? 'Eff%' : 'Ef%', value: effPct != null ? `${effPct}%` : '—', color: '#7eb3ff' },
-          { label: t('stat.excl_short', lang),      value: exclusions,                    color: '#ef4444' },
-          { label: t('stat.turnovers', lang),        value: turnovers,                     color: '#f97316' },
+          { label: lang === 'en' ? 'Save%' : 'Par%', value: savePct != null ? `${savePct}%` : '—', color: '#3b82f6' },
+          { label: lang === 'en' ? 'Eff%'  : 'Ef%',  value: effPct  != null ? `${effPct}%`  : '—', color: '#7eb3ff' },
+          { label: t('stat.excl_short', lang),        value: exclusions,                            color: '#ef4444' },
+          { label: t('stat.turnovers', lang),          value: turnovers,                             color: '#f97316' },
         ].map(({ label, value, color }) => (
           <div key={label} style={{ textAlign: 'center', padding: '4px 0' }}>
             <div style={{ color, fontSize: 17, fontWeight: 700 }}>{value}</div>
