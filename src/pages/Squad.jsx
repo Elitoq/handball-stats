@@ -156,9 +156,8 @@ function PlayerSeasonView({ player, data, lang, onBack }) {
 
   const isGK = player.role === 'goalkeeper'
   const matches = (data.matches ?? []).filter(m =>
-    m.players?.some(p => p.id === player.id) &&
-    m.events?.some(e => e.playerId === player.id)
-  ).sort((a, b) => b.createdAt - a.createdAt)
+    (m.events ?? []).some(e => e.playerId === player.id)
+  ).sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
 
   // Aggregate season stats
   const totals = matches.reduce((acc, m) => {
