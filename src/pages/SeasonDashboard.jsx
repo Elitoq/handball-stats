@@ -1,11 +1,18 @@
+import { useState } from 'react'
 import { BarChart2, FileText, ChevronLeft } from 'lucide-react'
 import { loadData, getPlayerStats } from '../data/store'
 import { printSeasonReport, printPlayerSeasonReport } from '../reports/generateReport'
 import { t } from '../i18n'
+import PlayerSeasonView from './PlayerSeasonView'
 
 export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
+  const [viewPlayer, setViewPlayer] = useState(null)
   const data = loadData()
   const matches = data.matches.filter(m => m.finished || m.events.length > 0)
+
+  if (viewPlayer) {
+    return <PlayerSeasonView player={viewPlayer} allMatches={data.matches} lang={lang} onBack={() => setViewPlayer(null)} />
+  }
 
   if (matches.length === 0) {
     return (
@@ -125,6 +132,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {scorers.map((p, i) => (
                 <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="scorer" lang={lang}
+                  onView={() => setViewPlayer(p)}
                   onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)), lang)} />
               ))}
             </div>
@@ -136,6 +144,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {goalkeepers.map((p, i) => (
                 <PlayerRankRow key={p.id} player={p} rank={i + 1} mode="goalkeeper" lang={lang}
+                  onView={() => setViewPlayer(p)}
                   onExport={() => printPlayerSeasonReport(p, matches.filter(m => m.players.some(pl => pl.id === p.id)), lang)} />
               ))}
             </div>
@@ -196,34 +205,36 @@ function ResultBar({ wins, draws, losses }) {
   )
 }
 
-function PlayerRankRow({ player, rank, mode, onExport, lang }) {
+function PlayerRankRow({ player, rank, mode, onView, onExport, lang }) {
   const s = player.stats
   const isGK = mode === 'goalkeeper'
   const medal = rank === 1 ? '🥇' : rank === 2 ? '🥈' : rank === 3 ? '🥉' : `${rank}.`
   return (
-    <div style={{ display: 'flex', alignItems: 'center', background: '#1f2937', borderRadius: 12, padding: '12px 14px', gap: 12 }}>
-      <span style={{ fontSize: rank <= 3 ? 18 : 14, minWidth: 28, color: '#9ca3af' }}>{medal}</span>
-      <div style={{ flex: 1 }}>
-        <div style={{ fontWeight: 600, fontSize: 15 }}>#{player.number} {player.name}</div>
-        <div style={{ color: '#6b7280', fontSize: 12 }}>
-          {player.matchCount} {player.matchCount !== 1 ? t('season.n_match_pl', lang) : t('season.n_match_sg', lang)}
-        </div>
-      </div>
-      {isGK ? (
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: 18 }}>{s.savePct != null ? `${s.savePct}%` : '-'}</div>
-          <div style={{ color: '#6b7280', fontSize: 11 }}>{s.saves} {t('season.saves', lang)}</div>
-        </div>
-      ) : (
-        <div style={{ textAlign: 'right' }}>
-          <div style={{ color: '#4ade80', fontWeight: 700, fontSize: 18 }}>{s.goals} {t('stat.goals', lang).toLowerCase()}</div>
-          <div style={{ color: '#6b7280', fontSize: 11 }}>
-            {s.shootingPct != null ? `${s.shootingPct}% ${t('season.efficiency', lang)}` : `${s.goals + s.misses} lanz.`}
+    <div style={{ display: 'flex', alignItems: 'center', background: '#1f2937', borderRadius: 12, overflow: 'hidden', gap: 0 }}>
+      <button onClick={onView} style={{ flex: 1, background: 'none', border: 'none', cursor: 'pointer', color: 'white', display: 'flex', alignItems: 'center', padding: '12px 14px', gap: 12, textAlign: 'left' }}>
+        <span style={{ fontSize: rank <= 3 ? 18 : 14, minWidth: 28, color: '#9ca3af' }}>{medal}</span>
+        <div style={{ flex: 1 }}>
+          <div style={{ fontWeight: 600, fontSize: 15 }}>#{player.number} {player.name}</div>
+          <div style={{ color: '#6b7280', fontSize: 12 }}>
+            {player.matchCount} {player.matchCount !== 1 ? t('season.n_match_pl', lang) : t('season.n_match_sg', lang)}
           </div>
         </div>
-      )}
+        {isGK ? (
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: '#60a5fa', fontWeight: 700, fontSize: 18 }}>{s.savePct != null ? `${s.savePct}%` : '-'}</div>
+            <div style={{ color: '#6b7280', fontSize: 11 }}>{s.saves} {t('season.saves', lang)}</div>
+          </div>
+        ) : (
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: '#4ade80', fontWeight: 700, fontSize: 18 }}>{s.goals} {t('stat.goals', lang).toLowerCase()}</div>
+            <div style={{ color: '#6b7280', fontSize: 11 }}>
+              {s.shootingPct != null ? `${s.shootingPct}% ${t('season.efficiency', lang)}` : `${s.goals + s.misses} lanz.`}
+            </div>
+          </div>
+        )}
+      </button>
       {onExport && (
-        <button onClick={onExport} style={{ background: '#0d2456', color: '#7eb3ff', border: '1px solid #1e3a7a', borderRadius: 8, padding: '6px 10px', fontSize: 11, cursor: 'pointer', flexShrink: 0 }}><FileText size={13} /></button>
+        <button onClick={onExport} style={{ background: '#0d2456', color: '#7eb3ff', border: 'none', borderLeft: '1px solid #1f2937', padding: '0 12px', fontSize: 11, cursor: 'pointer', alignSelf: 'stretch', display: 'flex', alignItems: 'center' }}><FileText size={13} /></button>
       )}
     </div>
   )

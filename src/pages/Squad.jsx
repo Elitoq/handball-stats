@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { User, Shield, Users, ChevronLeft, ChevronRight, Target, ArrowRightLeft, UserMinus } from 'lucide-react'
-import { loadData, saveData, createPlayer, getPlayerStats } from '../data/store'
+import { loadData, saveData, createPlayer } from '../data/store'
 import { t } from '../i18n'
+import PlayerSeasonView from './PlayerSeasonView'
 
 const s = { bg: '#030712', card: '#0d1117', border: '#1f2937', muted: '#6b7280', text: 'white', accent: '#7eb3ff' }
 
@@ -24,7 +25,7 @@ export default function Squad({ onBack, lang = 'es' }) {
 
   if (viewPlayer) {
     const player = data.squad.find(p => p.id === viewPlayer)
-    return <PlayerSeasonView player={player} data={data} lang={lang} onBack={() => setViewPlayer(null)} />
+    return <PlayerSeasonView player={player} allMatches={data.matches ?? []} lang={lang} onBack={() => setViewPlayer(null)} />
   }
 
   function addPlayer() {
@@ -149,150 +150,3 @@ export default function Squad({ onBack, lang = 'es' }) {
   )
 }
 
-// ── Player season summary view ────────────────────────────────
-
-function PlayerSeasonView({ player, data, lang, onBack }) {
-  if (!player) return null
-
-  const isGK = player.role === 'goalkeeper'
-  const matches = (data.matches ?? []).filter(m =>
-    (m.events ?? []).some(e => e.playerId === player.id)
-  ).sort((a, b) => (b.createdAt ?? 0) - (a.createdAt ?? 0))
-
-  // Aggregate season stats
-  const totals = matches.reduce((acc, m) => {
-    const st = getPlayerStats(m, player.id)
-    acc.goals     += st.goals
-    acc.misses    += st.misses
-    acc.saves     += st.saves
-    acc.conceded  += st.conceded
-    acc.exclusions+= st.exclusions
-    acc.turnovers += st.turnovers
-    return acc
-  }, { goals: 0, misses: 0, saves: 0, conceded: 0, exclusions: 0, turnovers: 0 })
-
-  const effPct  = totals.goals + totals.misses > 0 ? Math.round(totals.goals / (totals.goals + totals.misses) * 100) : null
-  const savePct = totals.saves + totals.conceded > 0 ? Math.round(totals.saves / (totals.saves + totals.conceded) * 100) : null
-
-  return (
-    <div style={{ minHeight: '100dvh', background: s.bg, color: s.text, fontFamily: 'system-ui, sans-serif', paddingBottom: 32 }}>
-      {/* Header */}
-      <div style={{ padding: '48px 16px 16px' }}>
-        <button onClick={onBack} style={{ color: s.muted, background: 'none', border: 'none', fontSize: 14, cursor: 'pointer', marginBottom: 16, display: 'flex', alignItems: 'center', gap: 4 }}>
-          <ChevronLeft size={16} /> {t('back', lang)}
-        </button>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{ width: 48, height: 48, borderRadius: 14, background: '#0d2456', border: '1px solid #1e3a7a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            {isGK ? <Shield size={22} color="#7eb3ff" /> : <User size={22} color="#7eb3ff" />}
-          </div>
-          <div>
-            <div style={{ fontSize: 22, fontWeight: 800 }}>#{player.number} {player.name}</div>
-            <div style={{ color: s.muted, fontSize: 13, marginTop: 2 }}>
-              {isGK ? t('squad.role_gk', lang) : t('squad.role_player', lang)} · {matches.length} {lang === 'en' ? 'matches' : 'partidos'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {matches.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '64px 0', color: '#4b5563', fontSize: 14 }}>
-          {lang === 'en' ? 'No match data yet.' : 'Sin datos de partido aún.'}
-        </div>
-      ) : (
-        <div style={{ padding: '0 16px' }}>
-          {/* Season totals */}
-          <div style={{ marginBottom: 8, color: s.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
-            {lang === 'en' ? 'Season totals' : 'Total temporada'}
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 20 }}>
-            {isGK ? [
-              { label: lang === 'en' ? 'Saves' : 'Paradas',  value: totals.saves,    color: '#3b82f6' },
-              { label: lang === 'en' ? 'Save %' : '% paradas', value: savePct != null ? `${savePct}%` : '—', color: '#7eb3ff' },
-              { label: lang === 'en' ? 'Exclusions' : 'Exclusiones', value: totals.exclusions, color: '#ef4444' },
-            ] : [
-              { label: lang === 'en' ? 'Goals' : 'Goles',       value: totals.goals,   color: '#22c55e' },
-              { label: lang === 'en' ? 'Efficiency' : 'Eficacia', value: effPct != null ? `${effPct}%` : '—', color: '#4ade80' },
-              { label: lang === 'en' ? 'Turnovers' : 'Pérdidas', value: totals.turnovers, color: '#f97316' },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ background: '#0d1117', border: `1px solid ${s.border}`, borderRadius: 14, padding: '16px 8px', textAlign: 'center' }}>
-                <div style={{ color, fontSize: 26, fontWeight: 800, lineHeight: 1 }}>{value}</div>
-                <div style={{ color: s.muted, fontSize: 11, marginTop: 6 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Secondary stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 24 }}>
-            {isGK ? [
-              { label: lang === 'en' ? 'Goals let in' : 'Goles encaj.', value: totals.conceded, color: '#f87171' },
-              { label: lang === 'en' ? 'Exclusions' : 'Exclusiones',    value: totals.exclusions, color: '#ef4444' },
-              { label: lang === 'en' ? 'Turnovers' : 'Pérdidas',        value: totals.turnovers,  color: '#f97316' },
-            ] : [
-              { label: lang === 'en' ? 'Misses' : 'Fallos',       value: totals.misses,     color: '#facc15' },
-              { label: lang === 'en' ? 'Exclusions' : 'Exclusiones', value: totals.exclusions, color: '#ef4444' },
-              { label: lang === 'en' ? 'Goals/match' : 'Goles/partido',
-                value: matches.length > 0 ? (totals.goals / matches.length).toFixed(1) : '—', color: '#a78bfa' },
-            ].map(({ label, value, color }) => (
-              <div key={label} style={{ background: '#0d1117', border: `1px solid ${s.border}`, borderRadius: 14, padding: '12px 8px', textAlign: 'center' }}>
-                <div style={{ color, fontSize: 20, fontWeight: 700, lineHeight: 1 }}>{value}</div>
-                <div style={{ color: s.muted, fontSize: 11, marginTop: 5 }}>{label}</div>
-              </div>
-            ))}
-          </div>
-
-          {/* Per-match breakdown */}
-          <div style={{ marginBottom: 10, color: s.muted, fontSize: 11, textTransform: 'uppercase', letterSpacing: 1 }}>
-            {lang === 'en' ? 'Match history' : 'Historial de partidos'}
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {matches.map(m => {
-              const st = getPlayerStats(m, player.id)
-              const eff = st.goals + st.misses > 0 ? Math.round(st.goals / (st.goals + st.misses) * 100) : null
-              const svp = st.saves + st.conceded > 0 ? Math.round(st.saves / (st.saves + st.conceded) * 100) : null
-              return (
-                <div key={m.id} style={{ background: '#0d1117', border: `1px solid ${s.border}`, borderRadius: 14, padding: '12px 16px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 }}>
-                    <div>
-                      <div style={{ fontWeight: 600, fontSize: 14, color: 'white' }}>vs {m.rival}</div>
-                      <div style={{ color: s.muted, fontSize: 12, marginTop: 1 }}>{m.date}</div>
-                    </div>
-                    <div style={{ fontSize: 14, fontWeight: 700, color: '#7eb3ff' }}>
-                      {m.events.filter(e=>e.type==='goal').length} — {m.rivalGoals ?? 0}
-                    </div>
-                  </div>
-                  <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-                    {isGK ? (
-                      <>
-                        <StatPill label={lang === 'en' ? 'Saves' : 'Paradas'} value={st.saves} color="#3b82f6" />
-                        {svp != null && <StatPill label="%" value={`${svp}%`} color="#7eb3ff" />}
-                        {st.conceded > 0 && <StatPill label={lang === 'en' ? 'Conceded' : 'Encaj.'} value={st.conceded} color="#f87171" />}
-                        {st.exclusions > 0 && <StatPill label={lang === 'en' ? 'Excl.' : 'Excl.'} value={st.exclusions} color="#ef4444" />}
-                      </>
-                    ) : (
-                      <>
-                        <StatPill label={lang === 'en' ? 'Goals' : 'Goles'} value={st.goals} color="#22c55e" />
-                        {eff != null && <StatPill label="%" value={`${eff}%`} color="#4ade80" />}
-                        {st.misses > 0 && <StatPill label={lang === 'en' ? 'Miss' : 'Fallos'} value={st.misses} color="#facc15" />}
-                        {st.exclusions > 0 && <StatPill label="Excl." value={st.exclusions} color="#ef4444" />}
-                        {st.turnovers > 0 && <StatPill label={lang === 'en' ? 'TO' : 'Pérd.'} value={st.turnovers} color="#f97316" />}
-                      </>
-                    )}
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function StatPill({ label, value, color }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 4, background: color + '18', border: `1px solid ${color}33`, borderRadius: 8, padding: '3px 8px' }}>
-      <span style={{ color, fontWeight: 700, fontSize: 13 }}>{value}</span>
-      <span style={{ color: '#6b7280', fontSize: 11 }}>{label}</span>
-    </div>
-  )
-}
