@@ -48,6 +48,7 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
   const saves      = match.events.filter(e => e.type === 'save').length
   const conceded   = match.events.filter(e => e.type === 'conceded').length
   const exclusions = match.events.filter(e => e.type === 'exclusion').length
+  const turnovers  = match.events.filter(e => e.type === 'turnover').length
 
   function handleConfirm(details) {
     const event = createEvent({ type: modal, playerId: details.playerId, minute, period, details })
@@ -97,6 +98,24 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
     saveData(updated)
   }
 
+  function adjustOurGoals(delta) {
+    if (delta > 0) {
+      // Quick goal with no player — keeps event log consistent
+      const event = createEvent({ type: 'goal', playerId: null, minute, period, details: {} })
+      const updated = {
+        ...data,
+        matches: data.matches.map(m =>
+          m.id !== matchId ? m : { ...m, events: [...m.events, event] }
+        ),
+      }
+      setData(updated); saveData(updated)
+    } else {
+      // Remove last goal event
+      const lastGoal = [...match.events].reverse().find(e => e.type === 'goal')
+      if (lastGoal) deleteEvent(lastGoal.id)
+    }
+  }
+
   function saveNotes(notes) {
     const updated = {
       ...data,
@@ -116,8 +135,8 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
     onBack()
   }
 
-  const goalsPct  = goals + misses > 0 ? ` · ${Math.round(goals/(goals+misses)*100)}%` : ''
-  const savesPct  = saves + conceded > 0 ? ` · ${Math.round(saves/(saves+conceded)*100)}%` : ''
+  const effPct   = goals + misses > 0 ? Math.round(goals / (goals + misses) * 100) : null
+  const savesPct = saves + conceded > 0 ? Math.round(saves / (saves + conceded) * 100) : null
 
   return (
     <div className="min-h-screen bg-gray-950 text-white flex flex-col">
@@ -147,7 +166,11 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
           <div style={{ color: '#6b7280', fontSize: 12, textAlign: 'center', marginBottom: 12 }}>{match.teamName} vs {match.rival}</div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16 }}>
             <div style={{ textAlign: 'center', flex: 1 }}>
-              <div style={{ fontSize: 68, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <button onClick={() => adjustOurGoals(-1)} style={{ background: '#1f2937', border: '1px solid #374151', color: '#6b7280', width: 28, height: 28, borderRadius: '50%', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, flexShrink: 0 }}>−</button>
+                <div style={{ fontSize: 68, fontWeight: 800, color: '#4ade80', lineHeight: 1, fontVariantNumeric: 'tabular-nums' }}>{goals}</div>
+                <button onClick={() => adjustOurGoals(1)} style={{ background: '#1f2937', border: '1px solid #374151', color: '#6b7280', width: 28, height: 28, borderRadius: '50%', fontSize: 18, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', lineHeight: 1, flexShrink: 0 }}>+</button>
+              </div>
               <div style={{ color: '#4b5563', fontSize: 12, marginTop: 4, fontWeight: 600 }}>{match.teamName}</div>
             </div>
             <div style={{ color: '#374151', fontSize: 32, fontWeight: 300 }}>—</div>
@@ -189,9 +212,9 @@ export default function MatchLive({ matchId, onBack, onStats, lang = 'es' }) {
       {/* Stats bar */}
       <div className="grid grid-cols-3 bg-gray-900 border-t border-gray-800 text-center">
         {[
-          { label: `${t('stat.goals', lang)}${goalsPct}`, value: goals,      color: '#22c55e' },
-          { label: `${t('stat.saves', lang)}${savesPct}`, value: saves,      color: '#3b82f6' },
-          { label: t('stat.excl_short', lang),            value: exclusions, color: '#ef4444' },
+          { label: lang === 'en' ? 'Efficiency' : 'Eficacia', value: effPct != null ? `${effPct}%` : '—', color: '#22c55e' },
+          { label: `${t('stat.saves', lang)}${savesPct != null ? ` ${savesPct}%` : ''}`, value: saves, color: '#3b82f6' },
+          { label: lang === 'en' ? 'Turnovers' : 'Pérdidas', value: turnovers, color: '#f97316' },
         ].map(({ label, value, color }) => (
           <div key={label} className="py-3">
             <div style={{ color, fontSize: 20, fontWeight: 700 }}>{value}</div>

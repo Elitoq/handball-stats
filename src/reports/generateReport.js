@@ -827,7 +827,7 @@ function printCSS() {
     .green { color: #15803d; } .blue { color: #1d4ed8; } .red { color: #dc2626; }
     .orange { color: #c2410c; } .purple { color: #1d4ed8; } .indigo { color: #1d4ed8; }
 
-    .zone-map-wrap { max-width: 340px; }
+    .zone-map-wrap { max-width: 340px; margin: 0 auto; }
     .zone-map-label { font-size: 11px; color: #6b7280; text-align: center; margin-bottom: 4px; }
     .zone-table { width: 100%; border-collapse: collapse; border: 2px solid #e5e7eb; border-radius: 8px; overflow: hidden; }
     .zone-legend { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; font-size: 11px; color: #6b7280; }
