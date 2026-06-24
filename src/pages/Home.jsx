@@ -62,14 +62,14 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
 
         {/* Nombre editable */}
         {editingName ? (
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginBottom: 4 }}>
+          <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 4 }}>
             <input
               ref={nameRef}
               value={nameInput}
               onChange={e => setNameInput(e.target.value)}
               onBlur={commitName}
               onKeyDown={e => e.key === 'Enter' && commitName()}
-              style={{ background: '#111827', border: '1px solid #1e3a7a', color: 'white', borderRadius: 10, padding: '6px 12px', fontSize: 22, fontWeight: 800, textAlign: 'center', outline: 'none', width: 220 }}
+              style={{ background: '#111827', border: '1px solid #1e3a7a', color: 'white', borderRadius: 10, padding: '6px 14px', fontSize: 22, fontWeight: 800, textAlign: 'center', outline: 'none', width: '100%', maxWidth: 260 }}
               placeholder="Tu nombre"
             />
           </div>
@@ -104,7 +104,7 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
       </div>
 
       {/* ── Match list ── */}
-      <div className="flex-1 px-4 pb-6">
+      <div className="flex-1 px-4 pb-2">
         {matches.length === 0 ? (
           <div className="text-center py-16">
             <Activity size={48} color="#374151" style={{ margin: '0 auto 16px' }} />
@@ -122,6 +122,11 @@ export default function Home({ onNewMatch, onOpenMatch, onOpenStats, onSquad, on
             </div>
           </div>
         )}
+      </div>
+
+      {/* ── Footer ── */}
+      <div style={{ textAlign: 'center', padding: '20px 0 8px', color: '#374151', fontSize: 12 }}>
+        Crafted by <span style={{ color: '#4b5563', fontWeight: 600 }}>Eliot</span>
       </div>
 
       {/* ── Settings sheet ── */}
@@ -237,10 +242,17 @@ function MatchCard({ match, onOpen, onStats, lang }) {
 
       {/* Top: result badge + rival + date */}
       <div style={{ padding: '14px 16px 12px', display: 'flex', alignItems: 'center', gap: 12 }}>
-        {/* Result badge */}
-        <div style={{ width: 36, height: 36, borderRadius: 10, background: resultColor + '18', border: `1.5px solid ${resultColor}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-          <span style={{ fontSize: 13, fontWeight: 800, color: resultColor }}>{resultLabel}</span>
-        </div>
+        {/* Result badge — pill for W/D/L, live dot for in-progress */}
+        {match.finished ? (
+          <div style={{ width: 36, height: 36, borderRadius: 10, background: resultColor + '18', border: `1.5px solid ${resultColor}55`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+            <span style={{ fontSize: 13, fontWeight: 800, color: resultColor }}>{resultLabel}</span>
+          </div>
+        ) : (
+          <div style={{ display: 'flex', alignItems: 'center', gap: 5, flexShrink: 0 }}>
+            <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#7eb3ff', boxShadow: '0 0 6px #7eb3ff' }} />
+            <span style={{ fontSize: 11, fontWeight: 700, color: '#7eb3ff', textTransform: 'uppercase', letterSpacing: 0.5 }}>{t('home.live', lang)}</span>
+          </div>
+        )}
         {/* Team info */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div style={{ fontWeight: 700, fontSize: 15, color: 'white', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>

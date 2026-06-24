@@ -167,6 +167,9 @@ export default function PlayerSeasonView({ player, allMatches, lang = 'es', onBa
 
         </div>
       )}
+      <div style={{ textAlign: 'center', padding: '24px 0 8px', color: '#374151', fontSize: 12 }}>
+        Crafted by <span style={{ color: '#4b5563', fontWeight: 600 }}>Eliot</span>
+      </div>
     </div>
   )
 }

@@ -159,6 +159,7 @@ export default function SeasonDashboard({ onBack, onOpenMatch, lang = 'es' }) {
           </div>
         </Section>
 
+        <Footer />
       </div>
     </div>
   )
@@ -296,6 +297,10 @@ function GoalTrendChart({ matches, lang }) {
       </div>
     </div>
   )
+}
+
+function Footer() {
+  return <div style={{ textAlign: 'center', padding: '24px 0 8px', color: '#374151', fontSize: 12 }}>Crafted by <span style={{ color: '#4b5563', fontWeight: 600 }}>Eliot</span></div>
 }
 
 const page = { minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }

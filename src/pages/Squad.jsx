@@ -91,7 +91,7 @@ export default function Squad({ onBack, lang = 'es' }) {
         </button>
       </form>
 
-      <div style={{ padding: '0 16px 32px' }}>
+      <div style={{ padding: '0 16px 8px' }}>
         {squad.length === 0 ? (
           <div style={{ textAlign: 'center', padding: '48px 0' }}>
             <Users size={40} color="#374151" style={{ margin: '0 auto 12px' }} />
@@ -156,6 +156,9 @@ export default function Squad({ onBack, lang = 'es' }) {
             </div>
           </>
         )}
+      </div>
+      <div style={{ textAlign: 'center', padding: '20px 0 24px', color: '#374151', fontSize: 12 }}>
+        Crafted by <span style={{ color: '#4b5563', fontWeight: 600 }}>Eliot</span>
       </div>
     </div>
   )
