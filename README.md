@@ -1,6 +1,14 @@
 # Handball Stats
 
-A real-time handball match tracking PWA built for coaches and analysts. Record events live, review per-player and team statistics, and export professional PDF reports — all from a mobile browser with no app install required.
+A real-time handball match tracking PWA built for coaches and analysts.
+
+## Why this exists
+
+Tracking handball stats during a live match is harder than it sounds.
+Existing tools are either generic sports apps that don't understand handball,
+or spreadsheets impossible to fill in fast enough while the game is happening.
+
+I play handball, so I built the tool I actually wanted on the bench. Record events live, review per-player and team statistics, and export professional PDF reports — all from a mobile browser with no app install required.
 
 ---
 
