@@ -2,6 +2,10 @@
 
 A real-time handball match tracking PWA built for coaches and analysts.
 
+<div align="center">
+  <img src="demo.gif" alt="Handball Stats demo" width="320" />
+</div>
+
 ## Why this exists
 
 Tracking handball stats during a live match is harder than it sounds.
