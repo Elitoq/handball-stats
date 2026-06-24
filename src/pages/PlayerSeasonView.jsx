@@ -10,11 +10,25 @@ export default function PlayerSeasonView({ player, allMatches, lang = 'es', onBa
 
   const isGK = player.role === 'goalkeeper'
 
+  // Resolve the correct player ID: the squad player ID may differ from the
+  // one stored in match events if the squad was recreated. Find the best-matching
+  // ID by looking inside m.players across all matches (same name + number).
+  const resolvedId = (() => {
+    for (const m of allMatches) {
+      if (!Array.isArray(m.players)) continue
+      const found = m.players.find(p =>
+        p.name === player.name && p.number === player.number
+      )
+      if (found) return found.id
+    }
+    return player.id // fallback to squad id
+  })()
+
   // Same logic as buildPlayerSeasonReport in generateReport.js
   const matchRows = allMatches
   .filter(m => Array.isArray(m.events))
   .map(m => {
-    const st = getPlayerStats(m, player.id)
+    const st = getPlayerStats(m, resolvedId)
     return { match: m, stats: st }
   }).filter(({ stats: st }) =>
     st.goals + st.misses + st.saves + st.conceded + st.exclusions + st.turnovers > 0
@@ -50,7 +64,7 @@ export default function PlayerSeasonView({ player, allMatches, lang = 'es', onBa
             <ChevronLeft size={16} /> {t('back', lang)}
           </button>
           {matchesForPdf.length > 0 && (
-            <button onClick={() => printPlayerSeasonReport(player, matchesForPdf, lang)}
+            <button onClick={() => printPlayerSeasonReport({ ...player, id: resolvedId }, matchesForPdf, lang)}
               style={{ background: '#0d2456', color: s.accent, border: '1px solid #1e3a7a', borderRadius: 8, padding: '6px 10px', fontSize: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5 }}>
               <FileText size={13} /> PDF
             </button>
