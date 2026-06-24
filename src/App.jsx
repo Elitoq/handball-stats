@@ -67,6 +67,7 @@ export default function App() {
       <MatchSetup
         onBack={() => setScreen('home')}
         onStart={id => { setActiveMatchId(id); setScreen('live') }}
+        lang={lang}
       />
     )
   } else if (screen === 'live') {
@@ -75,6 +76,7 @@ export default function App() {
         matchId={activeMatchId}
         onBack={() => setScreen('home')}
         onStats={() => setScreen('stats')}
+        lang={lang}
       />
     )
   } else if (screen === 'stats') {
@@ -82,15 +84,17 @@ export default function App() {
       <MatchStats
         matchId={activeMatchId}
         onBack={() => setScreen('home')}
+        lang={lang}
       />
     )
   } else if (screen === 'squad') {
-    content = <Squad onBack={() => setScreen('home')} />
+    content = <Squad onBack={() => setScreen('home')} lang={lang} />
   } else if (screen === 'season') {
     content = (
       <SeasonDashboard
         onBack={() => setScreen('home')}
         onOpenMatch={id => { setActiveMatchId(id); setScreen('live') }}
+        lang={lang}
       />
     )
   } else {

@@ -2,12 +2,13 @@ import { useState, useMemo } from 'react'
 import { User, Shield, Award, FileText, ChevronLeft, Target, ShieldOff, UserMinus, ArrowRightLeft } from 'lucide-react'
 import { loadData, getPlayerStats, calcPlayerRating, ratingLabel, ratingColor, GOAL_ZONES, SHOT_TYPES } from '../data/store'
 import { printMatchReport, printPlayerMatchReport } from '../reports/generateReport'
+import { t, tv } from '../i18n'
 
 const ZONE_LABELS = GOAL_ZONES.slice(0, 6).map(z =>
   z.replace(' alto', '↑').replace(' bajo', '↓').replace('Izq.', 'I').replace('Der.', 'D').replace('Centro', 'C')
 )
 
-export default function MatchStats({ matchId, onBack }) {
+export default function MatchStats({ matchId, onBack, lang = 'es' }) {
   const [selectedPlayer, setSelectedPlayer] = useState(null)
   const data = loadData()
   const match = data.matches.find(m => m.id === matchId)
@@ -21,17 +22,18 @@ export default function MatchStats({ matchId, onBack }) {
         player={player}
         stats={getPlayerStats(match, selectedPlayer)}
         onBack={() => setSelectedPlayer(null)}
+        lang={lang}
       />
     )
   }
 
-  return <TeamOverview match={match} onSelectPlayer={setSelectedPlayer} onBack={onBack} />
+  return <TeamOverview match={match} onSelectPlayer={setSelectedPlayer} onBack={onBack} lang={lang} />
 }
 
 // ── Team overview ──────────────────────────────────────────────
 
-function TeamOverview({ match, onSelectPlayer, onBack }) {
-  const [periodFilter, setPeriodFilter] = useState(0) // 0=todo, 1=1ª, 2=2ª
+function TeamOverview({ match, onSelectPlayer, onBack, lang }) {
+  const [periodFilter, setPeriodFilter] = useState(0)
   const showRatings = loadData().settings?.showRatings ?? true
 
   const hasPeriods = match.events.some(e => e.period === 2)
@@ -61,14 +63,14 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> Volver</button>
-          <button onClick={() => printMatchReport(match)} style={exportBtn}><FileText size={13} /> Exportar PDF</button>
+          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> {t('back', lang)}</button>
+          <button onClick={() => printMatchReport(match)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
         </div>
         <div style={{ fontSize: 18, fontWeight: 700, marginTop: 4 }}>{match.teamName} vs {match.rival}</div>
         <div style={{ color: '#6b7280', fontSize: 13 }}>{match.date}</div>
         {hasPeriods && (
           <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-            {[['Todo el partido', 0], ['1ª parte', 1], ['2ª parte', 2]].map(([label, val]) => (
+            {[[t('mstats.all', lang), 0], [t('mstats.p1', lang), 1], [t('mstats.p2', lang), 2]].map(([label, val]) => (
               <button
                 key={val}
                 onClick={() => setPeriodFilter(val)}
@@ -84,35 +86,31 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
       </div>
 
       <div style={{ padding: '0 16px 32px' }}>
-        {/* Totales */}
-        <Section title="Resumen del partido">
+        <Section title={t('mstats.summary', lang)}>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
-            <StatCard label="Goles" value={goals.length} color="#4ade80" />
-            <StatCard label="Fallos" value={misses.length} color="#facc15" />
-            <PctStatCard label="Eficacia" success={goals.length} total={goals.length + misses.length} color="#7eb3ff" />
+            <StatCard label={t('stat.goals', lang)}      value={goals.length}   color="#4ade80" />
+            <StatCard label={t('stat.misses', lang)}     value={misses.length}  color="#facc15" />
+            <PctStatCard label={t('stat.efficiency', lang)} success={goals.length} total={goals.length + misses.length} color="#7eb3ff" />
           </div>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8 }}>
-            <StatCard label="Paradas" value={saves.length} color="#60a5fa" />
-            <StatCard label="Encajados" value={conceded.length} color="#f87171" />
-            <PctStatCard label="% Paradas" success={saves.length} total={saves.length + conceded.length} color="#7eb3ff" />
+            <StatCard label={t('stat.saves', lang)}    value={saves.length}   color="#60a5fa" />
+            <StatCard label={t('stat.conceded', lang)} value={conceded.length} color="#f87171" />
+            <PctStatCard label={t('stat.save_pct', lang)} success={saves.length} total={saves.length + conceded.length} color="#7eb3ff" />
           </div>
         </Section>
 
-        {/* Mapa de goles del equipo */}
         {goals.length > 0 && (
-          <Section title="Mapa de goles del equipo">
-            <ZoneHeatmap successEvents={goals} totalEvents={[...goals, ...misses]} color="#16a34a" />
+          <Section title={t('mstats.goal_map', lang)}>
+            <ZoneHeatmap successEvents={goals} totalEvents={[...goals, ...misses]} color="#16a34a" lang={lang} />
           </Section>
         )}
 
-        {/* Mapa de paradas del equipo */}
         {saves.length > 0 && (
-          <Section title="Mapa de paradas del equipo">
-            <ZoneHeatmap successEvents={saves} totalEvents={[...saves, ...conceded]} color="#2563eb" />
+          <Section title={t('mstats.save_map', lang)}>
+            <ZoneHeatmap successEvents={saves} totalEvents={[...saves, ...conceded]} color="#2563eb" lang={lang} />
           </Section>
         )}
 
-        {/* Jugadora del partido */}
         {showRatings && playersWithStats.length > 0 && (() => {
           const rated = playersWithStats
             .map(p => ({ ...p, rating: calcPlayerRating(p.stats, p.role) }))
@@ -122,12 +120,14 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           if (!mvp) return null
           const rc = ratingColor(mvp.rating)
           return (
-            <Section title="Jugador del partido">
+            <Section title={t('mstats.mvp', lang)}>
               <div style={{ background: 'linear-gradient(135deg,#0a1628,#0d2456)', borderRadius: 16, padding: '16px 20px', display: 'flex', alignItems: 'center', gap: 16 }}>
                 <Award size={36} color="#7eb3ff" strokeWidth={1.5} />
                 <div style={{ flex: 1 }}>
                   <div style={{ fontWeight: 700, fontSize: 17 }}>#{mvp.number} {mvp.name}</div>
-                  <div style={{ color: '#7eb3ff', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>{mvp.role === 'goalkeeper' ? <><Shield size={11} /> Portero/a</> : <><User size={11} /> Jugador/a</>}</div>
+                  <div style={{ color: '#7eb3ff', fontSize: 12, marginTop: 2, display: 'flex', alignItems: 'center', gap: 4 }}>
+                    {mvp.role === 'goalkeeper' ? <><Shield size={11} /> {t('mstats.gk_role', lang)}</> : <><User size={11} /> {t('mstats.pl_role', lang)}</>}
+                  </div>
                 </div>
                 <div style={{ textAlign: 'center' }}>
                   <div style={{ color: rc, fontWeight: 900, fontSize: 32, lineHeight: 1 }}>{mvp.rating.toFixed(1)}</div>
@@ -138,30 +138,27 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
           )
         })()}
 
-        {/* Lista de jugadoras */}
         {playersWithStats.length > 0 && (
-          <Section title="Jugadores — toca para ver detalle">
+          <Section title={t('mstats.players', lang)}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {playersWithStats.map(p => (
-                <PlayerRow key={p.id} player={p} onSelect={() => onSelectPlayer(p.id)} />
+                <PlayerRow key={p.id} player={p} onSelect={() => onSelectPlayer(p.id)} lang={lang} />
               ))}
             </div>
           </Section>
         )}
 
-        {/* Notas */}
         {match.notes && (
-          <Section title="Notas del partido">
+          <Section title={t('mstats.notes', lang)}>
             <div style={{ background: '#1f2937', borderRadius: 12, padding: '14px 16px', color: '#d1d5db', fontSize: 14, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>
               {match.notes}
             </div>
           </Section>
         )}
 
-        {/* Timeline */}
         {evs.length > 0 && (
-          <Section title="Eventos">
-            <Timeline events={evs} players={match.players} />
+          <Section title={t('mstats.events', lang)}>
+            <Timeline events={evs} players={match.players} lang={lang} />
           </Section>
         )}
       </div>
@@ -171,7 +168,7 @@ function TeamOverview({ match, onSelectPlayer, onBack }) {
 
 // ── Player detail ──────────────────────────────────────────────
 
-function PlayerDetail({ match, player, stats, onBack }) {
+function PlayerDetail({ match, player, stats, onBack, lang }) {
   const isGoalkeeper = player?.role === 'goalkeeper'
   const showRatings = loadData().settings?.showRatings ?? true
 
@@ -179,15 +176,19 @@ function PlayerDetail({ match, player, stats, onBack }) {
     <div style={{ minHeight: '100dvh', background: '#030712', color: 'white', fontFamily: 'system-ui, sans-serif' }}>
       <div style={{ padding: '48px 16px 12px', position: 'sticky', top: 0, background: '#030712', zIndex: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> Equipo</button>
-          <button onClick={() => printPlayerMatchReport(match, player?.id)} style={exportBtn}><FileText size={13} /> Exportar PDF</button>
+          <button onClick={onBack} style={linkBtn}><ChevronLeft size={16} /> {t('mstats.team_btn', lang)}</button>
+          <button onClick={() => printPlayerMatchReport(match, player?.id)} style={exportBtn}><FileText size={13} /> {t('export_pdf', lang)}</button>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <span style={{ color: '#7eb3ff', fontWeight: 700, fontSize: 20 }}>#{player?.number}</span>
             <div>
               <div style={{ fontSize: 18, fontWeight: 700 }}>{player?.name}</div>
-              <div style={{ color: '#6b7280', fontSize: 13 }}>{isGoalkeeper ? <><Shield size={12} style={{display:'inline',marginRight:3}} />Portero/a</> : <><User size={12} style={{display:'inline',marginRight:3}} />Jugador/a</>}</div>
+              <div style={{ color: '#6b7280', fontSize: 13 }}>
+                {isGoalkeeper
+                  ? <><Shield size={12} style={{display:'inline',marginRight:3}} />{t('mstats.gk_role', lang)}</>
+                  : <><User size={12} style={{display:'inline',marginRight:3}} />{t('mstats.pl_role', lang)}</>}
+              </div>
             </div>
           </div>
           {showRatings && (() => {
@@ -206,56 +207,56 @@ function PlayerDetail({ match, player, stats, onBack }) {
 
       <div style={{ padding: '0 16px 32px' }}>
         {isGoalkeeper
-          ? <GoalkeeperStats stats={stats} />
-          : <FieldPlayerStats stats={stats} />
+          ? <GoalkeeperStats stats={stats} lang={lang} />
+          : <FieldPlayerStats stats={stats} lang={lang} />
         }
       </div>
     </div>
   )
 }
 
-function FieldPlayerStats({ stats }) {
+function FieldPlayerStats({ stats, lang }) {
   const totalShots = stats.goals + stats.misses
   return (
     <>
-      <Section title="Resumen ofensivo">
+      <Section title={t('mstats.off_sum', lang)}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
-          <StatCard label="Goles" value={stats.goals} color="#4ade80" />
-          <StatCard label="Fallos" value={stats.misses} color="#facc15" />
-          <PctStatCard label="Eficacia" success={stats.goals} total={totalShots} color="#7eb3ff" />
+          <StatCard label={t('stat.goals', lang)}      value={stats.goals}  color="#4ade80" />
+          <StatCard label={t('stat.misses', lang)}     value={stats.misses} color="#facc15" />
+          <PctStatCard label={t('stat.efficiency', lang)} success={stats.goals} total={totalShots} color="#7eb3ff" />
         </div>
         {stats.shootingPct != null && (
-          <EfficiencyBar pct={stats.shootingPct} color="#16a34a" label={`${stats.goals} goles de ${totalShots} lanzamientos`} />
+          <EfficiencyBar pct={stats.shootingPct} color="#16a34a" label={`${stats.goals} ${t('stat.goals', lang).toLowerCase()} / ${totalShots} ${t('stat.shots', lang).toLowerCase()}`} />
         )}
       </Section>
 
       {stats.goalEvents.length + stats.missEvents.length > 0 && (
-        <Section title="Eficacia por zona">
+        <Section title={t('mstats.zone_eff', lang)}>
           <ZoneEfficiencyMap
             successEvents={stats.goalEvents}
             totalEvents={[...stats.goalEvents, ...stats.missEvents]}
-            successLabel="Goles"
-            totalLabel="Lanzamientos"
+            successLabel={t('stat.goals', lang)}
+            totalLabel={t('stat.shots', lang)}
           />
         </Section>
       )}
       {stats.goalEvents.length + stats.missEvents.length > 0 && (
-        <Section title="Tipo de lanzamiento">
-          <ShotTypeChart events={[...stats.goalEvents, ...stats.missEvents]} goals={stats.goalEvents} color="#16a34a" />
+        <Section title={t('mstats.shot_type', lang)}>
+          <ShotTypeChart events={[...stats.goalEvents, ...stats.missEvents]} goals={stats.goalEvents} color="#16a34a" lang={lang} hitsLabel={t('mstats.hits', lang)} />
         </Section>
       )}
 
       {(stats.exclusions > 0 || stats.turnovers > 0) && (
-        <Section title="Disciplina">
+        <Section title={t('mstats.discipline', lang)}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <StatCard label="Exclusiones" value={stats.exclusions} color="#f87171" />
-            <StatCard label="Pérdidas" value={stats.turnovers} color="#fb923c" />
+            <StatCard label={t('stat.exclusions', lang)} value={stats.exclusions} color="#f87171" />
+            <StatCard label={t('stat.turnovers', lang)}  value={stats.turnovers}  color="#fb923c" />
           </div>
         </Section>
       )}
 
       {stats.goalEvents.length + stats.missEvents.length > 0 && (
-        <Section title="Lanzamientos por minuto">
+        <Section title={t('mstats.shots_min', lang)}>
           <MinuteChart events={[...stats.goalEvents, ...stats.missEvents]} goals={stats.goalEvents} />
         </Section>
       )}
@@ -263,39 +264,39 @@ function FieldPlayerStats({ stats }) {
   )
 }
 
-function GoalkeeperStats({ stats }) {
+function GoalkeeperStats({ stats, lang }) {
   const totalShots = stats.saves + stats.conceded
   return (
     <>
-      <Section title="Resumen bajo palos">
+      <Section title={t('mstats.gk_sum', lang)}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 8 }}>
-          <StatCard label="Paradas" value={stats.saves} color="#60a5fa" />
-          <StatCard label="Encajados" value={stats.conceded} color="#f87171" />
-          <PctStatCard label="% Paradas" success={stats.saves} total={totalShots} color="#7eb3ff" />
+          <StatCard label={t('stat.saves', lang)}    value={stats.saves}   color="#60a5fa" />
+          <StatCard label={t('stat.conceded', lang)} value={stats.conceded} color="#f87171" />
+          <PctStatCard label={t('stat.save_pct', lang)} success={stats.saves} total={totalShots} color="#7eb3ff" />
         </div>
         {stats.savePct != null && (
-          <EfficiencyBar pct={stats.savePct} color="#2563eb" label={`${stats.saves} paradas de ${totalShots} disparos`} />
+          <EfficiencyBar pct={stats.savePct} color="#2563eb" label={`${stats.saves} ${t('stat.saves', lang).toLowerCase()} / ${totalShots} ${t('stat.shots_rec', lang).toLowerCase()}`} />
         )}
       </Section>
 
       {stats.saveEvents.length + stats.concededEvents.length > 0 && (
-        <Section title="Eficacia por zona">
+        <Section title={t('mstats.zone_eff', lang)}>
           <ZoneEfficiencyMap
             successEvents={stats.saveEvents}
             totalEvents={[...stats.saveEvents, ...stats.concededEvents]}
-            successLabel="Paradas"
-            totalLabel="Disparos"
+            successLabel={t('stat.saves', lang)}
+            totalLabel={t('stat.shots_rec', lang)}
           />
         </Section>
       )}
       {stats.saveEvents.length + stats.concededEvents.length > 0 && (
-        <Section title="Tipo de disparo recibido">
-          <ShotTypeChart events={[...stats.saveEvents, ...stats.concededEvents]} goals={stats.saveEvents} color="#2563eb" />
+        <Section title={t('mstats.recv_type', lang)}>
+          <ShotTypeChart events={[...stats.saveEvents, ...stats.concededEvents]} goals={stats.saveEvents} color="#2563eb" lang={lang} hitsLabel={t('mstats.hits', lang)} />
         </Section>
       )}
 
       {stats.saveEvents.length + stats.concededEvents.length > 0 && (
-        <Section title="Disparos por minuto">
+        <Section title={t('mstats.shots_recv', lang)}>
           <MinuteChart events={[...stats.saveEvents, ...stats.concededEvents]} goals={stats.saveEvents} />
         </Section>
       )}
@@ -334,7 +335,7 @@ function PctStatCard({ label, success, total, color }) {
   )
 }
 
-function PlayerRow({ player, onSelect }) {
+function PlayerRow({ player, onSelect, lang }) {
   const s = player.stats
   const isGK = player.role === 'goalkeeper'
   const showRatings = loadData().settings?.showRatings ?? true
@@ -347,7 +348,11 @@ function PlayerRow({ player, onSelect }) {
           <span style={{ color: '#7eb3ff', fontWeight: 700, fontSize: 16, minWidth: 36 }}>#{player.number}</span>
           <div>
             <div style={{ fontWeight: 600, fontSize: 15 }}>{player.name}</div>
-            <div style={{ color: '#6b7280', fontSize: 12 }}>{isGK ? <><Shield size={11} style={{display:'inline',marginRight:3}} />Portero/a</> : <><User size={11} style={{display:'inline',marginRight:3}} />Jugador/a</>}</div>
+            <div style={{ color: '#6b7280', fontSize: 12 }}>
+              {isGK
+                ? <><Shield size={11} style={{display:'inline',marginRight:3}} />{t('mstats.gk_role', lang)}</>
+                : <><User size={11} style={{display:'inline',marginRight:3}} />{t('mstats.pl_role', lang)}</>}
+            </div>
           </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
@@ -363,16 +368,16 @@ function PlayerRow({ player, onSelect }) {
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4,1fr)', textAlign: 'center' }}>
         {(isGK
           ? [
-              { label: 'Paradas', value: s.saves, color: '#60a5fa' },
-              { label: 'Encajados', value: s.conceded, color: '#f87171' },
-              { label: '% Par.', value: s.savePct != null ? `${s.savePct}%` : '-', color: '#7eb3ff' },
-              { label: 'Exclus.', value: s.exclusions, color: '#f87171' },
+              { label: t('stat.saves', lang),    value: s.saves,    color: '#60a5fa' },
+              { label: t('stat.conceded', lang),  value: s.conceded, color: '#f87171' },
+              { label: t('stat.par_short', lang), value: s.savePct != null ? `${s.savePct}%` : '-', color: '#7eb3ff' },
+              { label: t('stat.excl_short', lang),value: s.exclusions, color: '#f87171' },
             ]
           : [
-              { label: 'Goles', value: s.goals, color: '#4ade80' },
-              { label: 'Fallos', value: s.misses, color: '#facc15' },
-              { label: 'Eficacia', value: s.shootingPct != null ? `${s.shootingPct}%` : '-', color: '#7eb3ff' },
-              { label: 'Pérd.', value: s.turnovers, color: '#fb923c' },
+              { label: t('stat.goals', lang),      value: s.goals,  color: '#4ade80' },
+              { label: t('stat.misses', lang),     value: s.misses, color: '#facc15' },
+              { label: t('stat.efficiency', lang), value: s.shootingPct != null ? `${s.shootingPct}%` : '-', color: '#7eb3ff' },
+              { label: t('stat.turn_short', lang), value: s.turnovers, color: '#fb923c' },
             ]
         ).map(({ label, value, color }) => (
           <div key={label}>
@@ -385,8 +390,7 @@ function PlayerRow({ player, onSelect }) {
   )
 }
 
-// Mapa de distribución para equipo: muestra count/total y %
-function ZoneHeatmap({ successEvents, totalEvents, color }) {
+function ZoneHeatmap({ successEvents, totalEvents, color, lang }) {
   const zones = GOAL_ZONES.slice(0, 6)
   const isBlue = color.includes('2563')
 
@@ -401,16 +405,16 @@ function ZoneHeatmap({ successEvents, totalEvents, color }) {
 
   function cellBg(success) {
     if (success === 0) return '#111827'
-    const t = success / maxSuccess
-    if (isBlue) return t < 0.4 ? '#1e3a5f' : t < 0.7 ? '#1d4ed8' : '#3b82f6'
-    return t < 0.4 ? '#14532d' : t < 0.7 ? '#15803d' : '#22c55e'
+    const tVal = success / maxSuccess
+    if (isBlue) return tVal < 0.4 ? '#1e3a5f' : tVal < 0.7 ? '#1d4ed8' : '#3b82f6'
+    return tVal < 0.4 ? '#14532d' : tVal < 0.7 ? '#15803d' : '#22c55e'
   }
 
   const hasAny = data.some(d => d.total > 0)
 
   return (
     <div style={{ background: '#1f2937', borderRadius: 12, padding: 12 }}>
-      <div style={{ color: '#6b7280', fontSize: 11, textAlign: 'center', marginBottom: 8 }}>Portería</div>
+      <div style={{ color: '#6b7280', fontSize: 11, textAlign: 'center', marginBottom: 8 }}>{t('mstats.net', lang)}</div>
       <div style={{ border: '2px solid #374151', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
           {data.slice(0, 3).map((d, i) => (
@@ -424,7 +428,7 @@ function ZoneHeatmap({ successEvents, totalEvents, color }) {
         </div>
       </div>
       {!hasAny && (
-        <div style={{ color: '#4b5563', fontSize: 12, textAlign: 'center', marginTop: 6 }}>Sin zona registrada</div>
+        <div style={{ color: '#4b5563', fontSize: 12, textAlign: 'center', marginTop: 6 }}>{t('mstats.no_zone', lang)}</div>
       )}
     </div>
   )
@@ -440,7 +444,6 @@ function DistCell({ label, success, total, pct, bg, border }) {
   )
 }
 
-// Mapa de eficacia por zona para jugadora individual (verde = bueno, rojo = malo)
 function ZoneEfficiencyMap({ successEvents, totalEvents, successLabel, totalLabel }) {
   const zones = GOAL_ZONES.slice(0, 6)
 
@@ -463,7 +466,7 @@ function ZoneEfficiencyMap({ successEvents, totalEvents, successLabel, totalLabe
 
   return (
     <div style={{ background: '#1f2937', borderRadius: 12, padding: 12 }}>
-      <div style={{ color: '#6b7280', fontSize: 11, textAlign: 'center', marginBottom: 8 }}>Portería — {successLabel} / {totalLabel}</div>
+      <div style={{ color: '#6b7280', fontSize: 11, textAlign: 'center', marginBottom: 8 }}>{successLabel} / {totalLabel}</div>
       <div style={{ border: '2px solid #374151', borderRadius: 8, overflow: 'hidden' }}>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)' }}>
           {zonesData.slice(0, 3).map((d, i) => (
@@ -476,7 +479,6 @@ function ZoneEfficiencyMap({ successEvents, totalEvents, successLabel, totalLabe
           ))}
         </div>
       </div>
-      {/* Leyenda */}
       <div style={{ display: 'flex', gap: 8, marginTop: 10, justifyContent: 'center' }}>
         {[['#15803d','>70%'],['#4d7c0f','50-70%'],['#b45309','30-50%'],['#b91c1c','<30%']].map(([c,l]) => (
           <div key={l} style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -519,21 +521,21 @@ function EfficiencyBar({ pct, color, label }) {
   )
 }
 
-function ShotTypeChart({ events, goals = [], color }) {
+function ShotTypeChart({ events, goals = [], color, lang, hitsLabel }) {
   const goalIds = new Set(goals.map(e => e.id))
   const types = events.map(e => e.details?.shotType).filter(Boolean)
-  if (types.length === 0) return <div style={{ color: '#4b5563', fontSize: 13, padding: '8px 0' }}>Sin tipo registrado</div>
+  if (types.length === 0) return <div style={{ color: '#4b5563', fontSize: 13, padding: '8px 0' }}>{t('mstats.no_type', lang)}</div>
 
-  const counts = SHOT_TYPES.map(t => {
-    const evs = events.filter(e => e.details?.shotType === t)
-    return { label: t, total: evs.length, success: evs.filter(e => goalIds.has(e.id)).length }
+  const counts = SHOT_TYPES.map(s => {
+    const evs = events.filter(e => e.details?.shotType === s)
+    return { key: s, label: tv('shot', s, lang), total: evs.length, success: evs.filter(e => goalIds.has(e.id)).length }
   }).filter(x => x.total > 0)
   const max = Math.max(...counts.map(c => c.total))
 
   return (
     <div style={{ background: '#1f2937', borderRadius: 12, padding: 16 }}>
-      {counts.map(({ label, total, success }) => (
-        <div key={label} style={{ marginBottom: 10 }}>
+      {counts.map(({ key, label, total, success }) => (
+        <div key={key} style={{ marginBottom: 10 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 3 }}>
             <span style={{ color: '#9ca3af', fontSize: 13 }}>{label}</span>
             <span style={{ color: '#6b7280', fontSize: 12 }}>{success}/{total}</span>
@@ -547,7 +549,7 @@ function ShotTypeChart({ events, goals = [], color }) {
       <div style={{ display: 'flex', gap: 12, marginTop: 4 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <div style={{ width: 10, height: 10, background: color, borderRadius: 2 }} />
-          <span style={{ color: '#6b7280', fontSize: 11 }}>Aciertos</span>
+          <span style={{ color: '#6b7280', fontSize: 11 }}>{hitsLabel}</span>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
           <div style={{ width: 10, height: 10, background: '#4b5563', borderRadius: 2 }} />
@@ -586,21 +588,23 @@ function MinuteChart({ events, goals = [] }) {
   )
 }
 
-const TYPE_META = {
-  goal:      { label: 'Gol',       Icon: Target,         color: '#22c55e' },
-  miss:      { label: 'Fallo',     Icon: Target,         color: '#f59e0b' },
-  save:      { label: 'Parada',    Icon: Shield,         color: '#3b82f6' },
-  conceded:  { label: 'Encajado',  Icon: ShieldOff,      color: '#f43f5e' },
-  exclusion: { label: 'Exclusión', Icon: UserMinus,      color: '#ef4444' },
-  turnover:  { label: 'Pérdida',   Icon: ArrowRightLeft, color: '#f97316' },
+const TYPE_META_KEYS = {
+  goal:      { labelKey: 'action.goal_lbl',      Icon: Target,         color: '#22c55e' },
+  miss:      { labelKey: 'action.miss_lbl',       Icon: Target,         color: '#f59e0b' },
+  save:      { labelKey: 'action.save_lbl',       Icon: Shield,         color: '#3b82f6' },
+  conceded:  { labelKey: 'action.conceded_lbl',   Icon: ShieldOff,      color: '#f43f5e' },
+  exclusion: { labelKey: 'action.exclusion_lbl',  Icon: UserMinus,      color: '#ef4444' },
+  turnover:  { labelKey: 'action.turnover_lbl',   Icon: ArrowRightLeft, color: '#f97316' },
 }
 
-function Timeline({ events, players }) {
+function Timeline({ events, players, lang }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
       {[...events].sort((a, b) => a.minute - b.minute).map(ev => {
         const player = players.find(p => p.id === ev.playerId)
-        const { label, Icon, color } = TYPE_META[ev.type] ?? { label: ev.type, Icon: Target, color: '#6b7280' }
+        const meta = TYPE_META_KEYS[ev.type] ?? { labelKey: null, Icon: Target, color: '#6b7280' }
+        const label = meta.labelKey ? t(meta.labelKey, lang) : ev.type
+        const { Icon, color } = meta
         return (
           <div key={ev.id} style={{ display: 'flex', alignItems: 'center', gap: 10, background: '#1f2937', borderRadius: 10, padding: '10px 14px' }}>
             <span style={{ color: '#6b7280', fontSize: 12, minWidth: 28 }}>{ev.minute}'</span>
