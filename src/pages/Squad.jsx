@@ -24,7 +24,19 @@ export default function Squad({ onBack, lang = 'es' }) {
   ]
 
   if (viewPlayer) {
-    return <PlayerSeasonView player={viewPlayer} allMatches={loadData().matches ?? []} lang={lang} onBack={() => setViewPlayer(null)} />
+    // Build playerMap from match history (same as SeasonDashboard) so IDs match events
+    const allMatches = loadData().matches ?? []
+    const playerMap = {}
+    allMatches.forEach(m => {
+      (m.players ?? []).forEach(p => {
+        if (!playerMap[p.id]) playerMap[p.id] = { ...p }
+      })
+    })
+    // Find the match-history player that matches by name+number
+    const matchPlayer = Object.values(playerMap).find(
+      p => p.name === viewPlayer.name && p.number === viewPlayer.number
+    ) ?? viewPlayer
+    return <PlayerSeasonView player={matchPlayer} allMatches={allMatches} lang={lang} onBack={() => setViewPlayer(null)} />
   }
 
   function addPlayer() {
